@@ -126,7 +126,7 @@ export function DropZone({
   }
 
   async function readFile(entry: FileSystemFileEntry) {
-    return new Promise<DropZoneFile>((resolve, reject) => {
+    return new Promise<DropZoneFile>((resolve, _) => {
       entry.file(async (file) => {
         const rawFile = file as DropZoneFile;
         rawFile.path = entry.fullPath;
@@ -163,8 +163,8 @@ export function DropZone({
           !!error
             ? "border-red-600 text-red-600"
             : isDragging
-            ? "border-blue-400 text-blue-400"
-            : "border-white text-white"
+              ? "border-blue-400 text-blue-400"
+              : "border-white text-white"
         } ${className ?? ""}`.trim()}
         onSubmit={(e) => e.preventDefault()}
         onDrop={onDrop}

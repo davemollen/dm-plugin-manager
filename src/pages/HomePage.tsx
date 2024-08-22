@@ -3,10 +3,6 @@ import { useEffect, useState } from "react";
 import { DropZone, DropZoneFile } from "@/components/DropZone";
 import JSZip from "jszip";
 import { useBrowserSupport } from "@/hooks/useBrowserSupport";
-import {
-  CreatePluginsResponse,
-  GetPluginsResponse,
-} from "@/pages/api/plugins/post/interfaces";
 import { useToast } from "@/hooks/useToast";
 import { UnsupportedBrowser } from "./HomePage/UnsupportedBrowser";
 import { DisconnectedMod } from "./HomePage/DisconnectedMod";
@@ -45,7 +41,7 @@ export function HomePage() {
 
   async function addPlugins(formData: FormData) {
     try {
-      const response: AxiosResponse<CreatePluginsResponse> = await axios.post(
+      const response: AxiosResponse<{ plugins: string[] }> = await axios.post(
         "/api/plugins",
         formData,
         {
