@@ -1,7 +1,7 @@
 {
   "productName": "mod-plugin-installer",
   "version": "0.1.0",
-  "identifier": "com.tauri.dev",
+  "identifier": "com.mod-plugin-uploader.app",
   "build": {
     "frontendDist": "..",
     "devUrl": "http://localhost:5173",
