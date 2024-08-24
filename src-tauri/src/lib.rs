@@ -9,14 +9,18 @@ use ssh_service::{SshError, SshService};
 
 #[tauri::command]
 async fn get_plugins() -> Result<Vec<String>, SshError> {
-    let mut ssh_service = SshService::new();
-    ssh_service.connect("192.168.51.1", "root", "mod").await?;
-    if let Some(response) = ssh_service.execute_command("ls .lv2").await? {
-        let plugins = response.split("\n").map(|item| item.to_string()).collect();
+    let ssh_service = SshService::connect("192.168.51.1", "root", "mod").await?;
+    let response = ssh_service.execute_command("ls .lv2", None).await?;
+    if response.stdout.is_empty() {
+        Err(SshError::Other("No plugins could be found.".to_string()))
+    } else {
+        let plugins = response
+            .stdout
+            .split("\n")
+            .map(|item| item.to_string())
+            .collect();
         ssh_service.disconnect().await?;
         Ok(plugins)
-    } else {
-        Err(SshError::Other("No plugins could be found.".to_string()))
     }
 }
 
@@ -28,8 +32,7 @@ struct File {
 
 #[tauri::command]
 async fn create_plugins(files: Vec<File>) -> Result<Vec<String>, SshError> {
-    let mut ssh_service = SshService::new();
-    ssh_service.connect("192.168.51.1", "root", "mod").await?;
+    let ssh_service = SshService::connect("192.168.51.1", "root", "mod").await?;
 
     let futures: Vec<_> = files
         .clone()
@@ -51,11 +54,8 @@ async fn create_plugins(files: Vec<File>) -> Result<Vec<String>, SshError> {
 
             println!("command: {}", command);
 
-            let mut ssh_service = ssh_service.clone();
-            async move {
-                // ssh_service.execute_command(&command).await?;
-                Ok::<(), SshError>(())
-            }
+            let ssh_service = ssh_service.clone();
+            async move { ssh_service.execute_command(&command, None).await }
         })
         .collect();
 
@@ -82,12 +82,9 @@ async fn create_plugins(files: Vec<File>) -> Result<Vec<String>, SshError> {
 
 #[tauri::command]
 async fn delete_plugin(name: String) -> Result<(), SshError> {
-    let mut ssh_service = SshService::new();
+    let ssh_service = SshService::connect("192.168.51.1:22", "root", "mod").await?;
     ssh_service
-        .connect("192.168.51.1:22", "root", "mod")
-        .await?;
-    ssh_service
-        .execute_command(format!("rf -rf .lv2/{name}").as_str())
+        .execute_command(format!("rf -rf .lv2/{name}").as_str(), None)
         .await?;
 
     Ok(())
