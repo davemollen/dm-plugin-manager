@@ -3,6 +3,7 @@
 import { createContext, ReactNode, useEffect, useReducer, useRef } from "react";
 import { ActionType, toastReducer } from "./ToastContextProvider/toastReducer";
 import { Toasts } from "../components/Toasts";
+import { info } from "@tauri-apps/plugin-log";
 
 const TOAST_DISPLAY_TIME = 5000;
 
@@ -20,6 +21,8 @@ export const ToastContextProvider = ({ children }: { children: ReactNode }) => {
 
   function addToast(message: string, type: "success" | "error") {
     const id = state.toasts.length;
+
+    info("toast added with id: " + id);
     dispatch({ type: ActionType.ADD_TOAST, payload: { id, message, type } });
 
     timerRef.current[id] = setTimeout(() => {

@@ -1,7 +1,17 @@
+import { attachConsole } from "@tauri-apps/plugin-log";
 import { ToastContextProvider } from "./contexts/ToastContextProvider";
 import { HomePage } from "./pages/HomePage";
+import { useEffect } from "react";
 
 function App() {
+  useEffect(() => {
+    const promise = attachConsole();
+
+    return () => {
+      promise.then((f) => f());
+    };
+  }, []);
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-2 md:p-8 lg:p-16 xl:p-24">
       <div className="w-full max-w-screen-2xl items-center justify-between font-mono text-base">

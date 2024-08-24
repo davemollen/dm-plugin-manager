@@ -1,19 +1,15 @@
-import axios, { AxiosError, AxiosResponse } from "axios";
 import { useEffect, useState } from "react";
 import { DropZone, DropZoneFile } from "@/components/DropZone";
-import JSZip from "jszip";
 import { useBrowserSupport } from "@/hooks/useBrowserSupport";
 import { useToast } from "@/hooks/useToast";
 import { UnsupportedBrowser } from "./HomePage/UnsupportedBrowser";
 import { DisconnectedMod } from "./HomePage/DisconnectedMod";
 import { Plugin } from "./HomePage/Plugin";
 import { invoke } from "@tauri-apps/api/core";
-import { info } from "@tauri-apps/plugin-log";
+import { error, info } from "@tauri-apps/plugin-log";
+import { commaJoin } from "@/utils/commaJoin";
 
 export function HomePage() {
-  const zip = new JSZip();
-  const formData = new FormData();
-
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [modIsDisconnected, setModIsDisconnected] = useState<boolean>(false);
   const [plugins, setPlugins] = useState<string[] | undefined>();
@@ -21,36 +17,34 @@ export function HomePage() {
   const toast = useToast();
 
   async function getPlugins() {
-    const response: string[] = await invoke("get_plugins");
-    info("Info log with response: " + response.join(", "));
-    setPlugins(response);
-    setIsLoading(false);
-    // try {
-    //   setIsLoading(true);
-    //   setModIsDisconnected(false);
-    //   const response: AxiosResponse<GetPluginsResponse> = await axios.get(
-    //     "/api/plugins"
-    //   );
-    //   setPlugins(response.data.plugins);
-    // } catch (e) {
-    //   handleErrors(e);
-    // } finally {
-    //   setIsLoading(false);
-    // }
+    try {
+      setIsLoading(true);
+      setModIsDisconnected(false);
+      const plugins = await invoke<string[]>("get_plugins");
+      info("done loading plugins" + plugins);
+      setPlugins(plugins);
+    } catch (e) {
+      handleErrors(e);
+    } finally {
+      setIsLoading(false);
+    }
   }
 
-  async function addPlugins(formData: FormData) {
+  async function addPlugins(dropZoneFiles: DropZoneFile[]) {
     try {
-      const response: AxiosResponse<{ plugins: string[] }> = await axios.post(
-        "/api/plugins",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
+      const files = await Promise.all(
+        dropZoneFiles.map(async (file) => {
+          const arrayBuffer = await file.arrayBuffer();
+          return {
+            path: file.path || file.webkitRelativePath,
+            buffer: Array.from(new Uint8Array(arrayBuffer)),
+          };
+        })
       );
-      const createdPlugins = response.data.plugins;
+      const createdPlugins = await invoke<string[]>("create_plugins", {
+        files,
+      });
+      console.log("createdPlugins", createdPlugins);
       if (plugins) {
         setPlugins(
           createdPlugins
@@ -63,11 +57,7 @@ export function HomePage() {
         );
       }
 
-      toast?.success(
-        createdPlugins.length > 1
-          ? `Added the following plugins: "${createdPlugins.join(",")}."`
-          : `Added "${createdPlugins}".`
-      );
+      toast?.success(`Added ${commaJoin(createdPlugins)}.`);
     } catch (e) {
       handleErrors(e);
     }
@@ -75,7 +65,9 @@ export function HomePage() {
 
   async function removePlugin(name: string) {
     try {
-      await axios.delete("/api/plugins", { data: { name } });
+      await invoke<void>("delete_plugin", {
+        name,
+      });
       if (plugins) {
         setPlugins(plugins.filter((plugin) => plugin !== name));
       }
@@ -85,27 +77,14 @@ export function HomePage() {
     }
   }
 
-  function handleErrors(e: unknown) {
-    const error = e as AxiosError;
-    if (error.response?.status === 503) {
+  function handleErrors(err: unknown) {
+    const e = err as string;
+    error("Handle error log: " + e);
+    if (e.startsWith("Invalid address was provided: ")) {
       setModIsDisconnected(true);
     } else {
-      toast?.error(error.message);
+      toast?.error(e);
     }
-  }
-
-  async function onFileUpload(files: DropZoneFile[]) {
-    await Promise.all(
-      files.map(async (file) => {
-        const content = await file.arrayBuffer();
-        zip.file(file.path || file.webkitRelativePath, content);
-      })
-    );
-
-    const zipBlob = await zip.generateAsync({ type: "blob" });
-    formData.append("zipFile", zipBlob);
-
-    await addPlugins(formData);
   }
 
   useEffect(() => {
@@ -151,7 +130,7 @@ export function HomePage() {
       <div className="sticky top-0 w-full border-b-2 border-white bg-black py-6">
         <h3 className="text-3xl tracking-wide">Plugins</h3>
         <DropZone
-          onChange={onFileUpload}
+          onChange={addPlugins}
           allowedFileTypes={[".lv2"]}
           className="w-1/3 min-w-60 rounded-xl"
         />

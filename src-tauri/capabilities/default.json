@@ -6,6 +6,9 @@
     "main"
   ],
   "permissions": [
-    "core:default"
+    "core:app:default",
+    "log:default",
+    "core:event:allow-listen",
+    "core:event:default"
   ]
 }

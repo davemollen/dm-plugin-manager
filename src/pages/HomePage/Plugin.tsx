@@ -33,7 +33,7 @@ export function Plugin({
       >
         {name}
         <button onClick={onButtonClick}>
-          <FontAwesomeIcon icon={faTrashCan} />
+          <FontAwesomeIcon icon={faTrashCan} className="hover:text-blue-400" />
         </button>
       </li>
       <Dialog

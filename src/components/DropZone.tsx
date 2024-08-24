@@ -1,3 +1,4 @@
+import { info } from "@tauri-apps/plugin-log";
 import { ChangeEvent, DragEvent, KeyboardEvent, useRef, useState } from "react";
 
 export interface DropZoneFile extends File {
@@ -159,7 +160,7 @@ export function DropZone({
         role="button"
         aria-label="dropzone"
         tabIndex={0}
-        className={`relative mt-6 flex cursor-pointer flex-col items-center justify-center border-2 border-dashed p-4 text-center ${
+        className={`relative mt-6 flex cursor-pointer flex-col items-center justify-center border-2 border-dashed p-4 text-center hover:border-blue-400 hover:text-blue-400 ${
           !!error
             ? "border-red-600 text-red-600"
             : isDragging
