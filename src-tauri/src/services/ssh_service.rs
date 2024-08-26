@@ -42,6 +42,8 @@ pub struct SshService {
 }
 
 impl SshService {
+    const CONNECTION_TIMEOUT: Duration = Duration::from_secs(5);
+
     pub async fn connect(url: &str, username: &str, password: &str) -> Result<Self, SshError> {
         let future = async {
             let config = Arc::new(Config::default());
@@ -53,7 +55,7 @@ impl SshService {
             })
         };
 
-        match timeout(Duration::from_secs(5), future).await {
+        match timeout(Self::CONNECTION_TIMEOUT, future).await {
             Ok(result) => result,
             Err(_) => Err(SshError::ConnectionTimeoutError),
         }
