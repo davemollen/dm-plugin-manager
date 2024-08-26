@@ -1,12 +1,8 @@
 use async_trait::async_trait;
-use futures::AsyncWriteExt;
-use russh::client::{connect, Config, Handle, Handler};
-use russh::keys::key;
-use russh::Disconnect;
-use std::sync::Arc;
-use std::time::Duration;
+use russh::{client, keys::key, ChannelMsg, Disconnect};
+use std::{sync::Arc, time::Duration};
 use thiserror::Error;
-use tokio::time::timeout;
+use tokio::{io::AsyncWriteExt, time::timeout};
 
 #[derive(Error, Debug)]
 pub enum SshError {
@@ -21,12 +17,15 @@ pub enum SshError {
 
     #[error("Ssh connection timed out")]
     ConnectionTimeoutError,
+
+    #[error("Ssh write to buffer failed: {0}")]
+    WriteError(#[from] std::io::Error),
 }
 
 struct ClientHandler;
 
 #[async_trait]
-impl Handler for ClientHandler {
+impl client::Handler for ClientHandler {
     type Error = russh::Error;
 
     async fn check_server_key(
@@ -38,7 +37,7 @@ impl Handler for ClientHandler {
 }
 
 pub struct SshService {
-    client: Arc<Handle<ClientHandler>>,
+    client: Arc<client::Handle<ClientHandler>>,
 }
 
 impl SshService {
@@ -46,8 +45,8 @@ impl SshService {
 
     pub async fn connect(url: &str, username: &str, password: &str) -> Result<Self, SshError> {
         let future = async {
-            let config = Arc::new(Config::default());
-            let mut session = connect(config, (url, 22), ClientHandler {}).await?;
+            let config = Arc::new(client::Config::default());
+            let mut session = client::connect(config, (url, 22), ClientHandler {}).await?;
             session.authenticate_password(username, password).await?;
 
             Ok(SshService {
@@ -81,15 +80,15 @@ impl SshService {
 
         while let Some(msg) = channel.wait().await {
             match msg {
-                russh::ChannelMsg::Data { ref data } => {
-                    stdout_buffer.write_all(data).await.unwrap();
+                ChannelMsg::Data { ref data } => {
+                    stdout_buffer.write_all(data).await?;
                 }
-                russh::ChannelMsg::ExtendedData { ref data, ext } => {
+                ChannelMsg::ExtendedData { ref data, ext } => {
                     if ext == 1 {
-                        stderr_buffer.write_all(data).await.unwrap();
+                        stderr_buffer.write_all(data).await?;
                     }
                 }
-                russh::ChannelMsg::ExitStatus { exit_status } => {
+                ChannelMsg::ExitStatus { exit_status } => {
                     exit_status_result = Some(exit_status);
                 }
                 _ => {}

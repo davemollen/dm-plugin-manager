@@ -1,8 +1,8 @@
 [package]
-name = "app"
+name = "mod-plugin-manager"
 version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
+description = "MOD plugin manager"
+authors = ["Dave Mollen"]
 license = ""
 repository = ""
 edition = "2021"
@@ -24,6 +24,5 @@ tauri = { version = "2.0.0-rc.5", features = [] }
 tauri-plugin-log = "2.0.0-rc"
 thiserror = "1.0.63"
 russh = "0.45.0"
-futures = "0.3.30"
 async-trait = "0.1.81"
 tokio = "1.39.3"
