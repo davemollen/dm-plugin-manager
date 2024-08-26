@@ -1,4 +1,5 @@
-import { info } from "@tauri-apps/plugin-log";
+import { faSpinner } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { ChangeEvent, DragEvent, KeyboardEvent, useRef, useState } from "react";
 
 export interface DropZoneFile extends File {
@@ -15,10 +16,14 @@ declare module "react" {
 export function DropZone({
   onChange,
   allowedFileTypes,
+  isLoading,
+  disabled,
   className,
 }: {
   onChange: (files: DropZoneFile[]) => void;
   allowedFileTypes?: string[];
+  disabled?: boolean;
+  isLoading?: boolean;
   className?: string;
 }) {
   const [isDragging, setIsDragging] = useState<boolean>(false);
@@ -160,13 +165,13 @@ export function DropZone({
         role="button"
         aria-label="dropzone"
         tabIndex={0}
-        className={`relative mt-6 flex cursor-pointer flex-col items-center justify-center border-2 border-dashed p-4 text-center hover:border-blue-400 hover:text-blue-400 ${
+        className={`relative min-h-32 mt-6 flex flex-col items-center justify-center border-2 border-dashed p-4 text-center ${
           !!error
             ? "border-red-600 text-red-600"
-            : isDragging
+            : isDragging && !disabled
               ? "border-blue-400 text-blue-400"
               : "border-white text-white"
-        } ${className ?? ""}`.trim()}
+        } ${disabled ? "opacity-50 cursor-not-allowed" : "opacity-100 cursor-pointer hover:border-blue-400 hover:text-blue-400"} ${className ?? ""}`.trim()}
         onSubmit={(e) => e.preventDefault()}
         onDrop={onDrop}
         onDragLeave={onDragLeave}
@@ -180,13 +185,22 @@ export function DropZone({
           ref={inputRef}
           type="file"
           multiple={true}
+          disabled={disabled}
           onChange={onFileChange}
           className="hidden"
         />
-        <p>
-          Add new plugins by dragging your files here or by clicking in this
-          area.
-        </p>
+        {isLoading ? (
+          <FontAwesomeIcon
+            icon={faSpinner}
+            size="2xl"
+            className="animate-spin"
+          />
+        ) : (
+          <p>
+            Add new plugins by dragging your files here or by clicking in this
+            area.
+          </p>
+        )}
       </div>
       {!!error && <p className="mt-2 text-red-600">{error}</p>}
     </form>

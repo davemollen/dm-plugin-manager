@@ -2,10 +2,6 @@ export function UnsupportedBrowser() {
   return (
     <div className="rounded-2xl bg-red-500 p-6">
       <h3 className="text-3xl tracking-wide">Unsupported browser.</h3>
-      <p className="mt-2">
-        Unfortunately your browser is not supported. Try to update or visit this
-        website through another browser.
-      </p>
       <p className="mt-4 text-base">
         Alternatively you can also use the terminal to transfer plugins from
         your system to your MOD. Follow these steps:

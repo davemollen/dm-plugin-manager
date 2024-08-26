@@ -2,13 +2,18 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrashCan } from "@fortawesome/free-solid-svg-icons";
 import { Dialog } from "@/components/Dialog";
 import { useRef } from "react";
+import { faSpinner } from "@fortawesome/free-solid-svg-icons/faSpinner";
 
 export function Plugin({
   name,
   onRemove,
+  isRemoving,
+  className,
 }: {
   name: string;
   onRemove: (name: string) => void;
+  isRemoving: boolean;
+  className?: string;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
 
@@ -29,11 +34,18 @@ export function Plugin({
     <>
       <li
         key={name}
-        className="flex h-12 w-full items-center justify-between rounded-xl border-2 border-white px-2 py-1 text-lg"
+        className={`flex h-12 w-full items-center justify-between rounded-xl border-2 border-white px-2 py-1 text-lg ${className ?? ""}`.trim()}
       >
         {name}
         <button onClick={onButtonClick}>
-          <FontAwesomeIcon icon={faTrashCan} className="hover:text-blue-400" />
+          {isRemoving ? (
+            <FontAwesomeIcon icon={faSpinner} className="animate-spin" />
+          ) : (
+            <FontAwesomeIcon
+              icon={faTrashCan}
+              className="hover:text-blue-400"
+            />
+          )}
         </button>
       </li>
       <Dialog

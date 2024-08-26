@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { DropZone, DropZoneFile } from "@/components/DropZone";
 import { useBrowserSupport } from "@/hooks/useBrowserSupport";
 import { useToast } from "@/hooks/useToast";
@@ -6,32 +6,37 @@ import { UnsupportedBrowser } from "./HomePage/UnsupportedBrowser";
 import { DisconnectedMod } from "./HomePage/DisconnectedMod";
 import { Plugin } from "./HomePage/Plugin";
 import { invoke } from "@tauri-apps/api/core";
-import { error, info } from "@tauri-apps/plugin-log";
+import { error } from "@tauri-apps/plugin-log";
 import { commaJoin } from "@/utils/commaJoin";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faRefresh } from "@fortawesome/free-solid-svg-icons";
 
 export function HomePage() {
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isFetching, setIsFetching] = useState<boolean>(true);
+  const [isCreating, setIsCreating] = useState<boolean>(false);
+  const [removals, setRemovals] = useState<string[]>([]);
   const [modIsDisconnected, setModIsDisconnected] = useState<boolean>(false);
   const [plugins, setPlugins] = useState<string[] | undefined>();
   const { supportsWebkitGetAsEntry } = useBrowserSupport();
   const toast = useToast();
 
-  async function getPlugins() {
+  const getPlugins = useCallback(async function () {
     try {
-      setIsLoading(true);
+      setIsFetching(true);
       setModIsDisconnected(false);
       const plugins = await invoke<string[]>("get_plugins");
-      info("done loading plugins" + plugins);
       setPlugins(plugins);
     } catch (e) {
       handleErrors(e);
     } finally {
-      setIsLoading(false);
+      setIsFetching(false);
     }
-  }
+  }, []);
 
   async function addPlugins(dropZoneFiles: DropZoneFile[]) {
     try {
+      setModIsDisconnected(false);
+      setIsCreating(true);
       const files = await Promise.all(
         dropZoneFiles.map(async (file) => {
           const arrayBuffer = await file.arrayBuffer();
@@ -44,7 +49,6 @@ export function HomePage() {
       const createdPlugins = await invoke<string[]>("create_plugins", {
         files,
       });
-      console.log("createdPlugins", createdPlugins);
       if (plugins) {
         setPlugins(
           createdPlugins
@@ -60,11 +64,15 @@ export function HomePage() {
       toast?.success(`Added ${commaJoin(createdPlugins)}.`);
     } catch (e) {
       handleErrors(e);
+    } finally {
+      setIsCreating(false);
     }
   }
 
   async function removePlugin(name: string) {
     try {
+      setRemovals([...removals, name]);
+      setModIsDisconnected(false);
       await invoke<void>("delete_plugin", {
         name,
       });
@@ -74,6 +82,8 @@ export function HomePage() {
       toast?.success(`Removed "${name}".`);
     } catch (e) {
       handleErrors(e);
+    } finally {
+      setRemovals(removals.filter((removal) => removal !== name));
     }
   }
 
@@ -89,8 +99,7 @@ export function HomePage() {
 
   useEffect(() => {
     getPlugins();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [getPlugins]);
 
   if (supportsWebkitGetAsEntry === false) {
     return <UnsupportedBrowser />;
@@ -98,9 +107,9 @@ export function HomePage() {
   if (modIsDisconnected) {
     return <DisconnectedMod getPlugins={getPlugins} />;
   }
-  if (isLoading) {
+  if (isFetching) {
     return (
-      <div className="rounded-2xl p-6 pt-0">
+      <div className="rounded-2xl">
         <div className="w-full bg-black py-6">
           <h3 className="text-3xl tracking-wide">Plugins</h3>
           <div className="animate-pulse">
@@ -110,14 +119,14 @@ export function HomePage() {
             />
           </div>
         </div>
-        <ul className="mt-6 grid animate-pulse grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+        <ul className="mt-6 animate-pulse columns-1 sm:columns-2 lg:columns-3 2xl:columns-4 gap-2">
           {Array(36)
             .fill(1)
             .map((_, i) => {
               return (
                 <li
                   key={i}
-                  className="flex h-12 w-full items-center rounded-lg border-2 border-white bg-gray-200 px-2 py-1 text-lg"
+                  className="mb-2 last:mb-0 flex h-12 w-full items-center rounded-lg border-2 border-white bg-gray-200 px-2 py-1 text-lg"
                 />
               );
             })}
@@ -126,18 +135,37 @@ export function HomePage() {
     );
   }
   return (
-    <div className="rounded-2xl p-6 pt-0">
+    <div className="rounded-2xl">
       <div className="sticky top-0 w-full border-b-2 border-white bg-black py-6">
-        <h3 className="text-3xl tracking-wide">Plugins</h3>
+        <div className="flex justify-between">
+          <h3 className="text-3xl tracking-wide">Plugins</h3>
+          <button
+            onClick={getPlugins}
+            className="flex gap-2 hover:text-blue-400"
+          >
+            <span>Refresh</span>
+            <FontAwesomeIcon icon={faRefresh} size="xl" />
+          </button>
+        </div>
         <DropZone
           onChange={addPlugins}
           allowedFileTypes={[".lv2"]}
+          isLoading={isCreating}
+          disabled={isCreating}
           className="w-1/3 min-w-60 rounded-xl"
         />
       </div>
-      <ul className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+      <ul className="mt-6 columns-1 sm:columns-2 lg:columns-3 2xl:columns-4 gap-2">
         {plugins?.map((name) => {
-          return <Plugin key={name} name={name} onRemove={removePlugin} />;
+          return (
+            <Plugin
+              key={name}
+              name={name}
+              onRemove={removePlugin}
+              isRemoving={removals.includes(name)}
+              className="mb-2 last:mb-0"
+            />
+          );
         })}
       </ul>
     </div>

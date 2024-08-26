@@ -1,7 +1,7 @@
 import { Reducer } from "react";
 
 export type Toast = {
-  id: number;
+  id: string;
   message: string;
   type: "success" | "error";
 };
@@ -23,7 +23,7 @@ type Action =
     }
   | {
       type: ActionType.DELETE_TOAST;
-      payload: number;
+      payload: string;
     };
 
 export const toastReducer: Reducer<State, Action> = (state, action) => {

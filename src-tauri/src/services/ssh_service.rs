@@ -1,8 +1,8 @@
 use async_trait::async_trait;
 use futures::AsyncWriteExt;
-use russh::client::{connect, Handle, Handler, Msg};
+use russh::client::{connect, Handle, Handler};
 use russh::keys::key;
-use russh::{Channel, Disconnect};
+use russh::Disconnect;
 use std::sync::Arc;
 use std::time::Duration;
 use thiserror::Error;
@@ -24,29 +24,9 @@ pub enum SshError {
 
     #[error("The executed command didn't send an exit code")]
     CommandDidntExit,
-
-    #[error("SSH client is not connected.")]
-    DisconnectedError,
-
-    #[error("Command error: {0}")]
-    CommandError(String),
-
-    #[error("{0}")]
-    Other(String),
 }
 
-impl serde::Serialize for SshError {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::ser::Serializer,
-    {
-        serializer.serialize_str(self.to_string().as_ref())
-    }
-}
-
-struct ClientHandler {
-    channel: Option<Channel<Msg>>,
-}
+struct ClientHandler;
 
 #[async_trait]
 impl Handler for ClientHandler {
@@ -71,7 +51,7 @@ impl SshService {
             ..Default::default()
         });
 
-        let mut session = connect(config, (url, 22), ClientHandler { channel: None }).await?;
+        let mut session = connect(config, (url, 22), ClientHandler {}).await?;
         session.authenticate_password(username, password).await?;
 
         Ok(SshService {
@@ -97,7 +77,6 @@ impl SshService {
 
         channel.eof().await?;
 
-        // While the channel has messages...
         while let Some(msg) = channel.wait().await {
             match msg {
                 russh::ChannelMsg::Data { ref data } => {
@@ -131,13 +110,5 @@ impl SshService {
             .disconnect(Disconnect::ByApplication, "", "English")
             .await?;
         Ok(())
-    }
-}
-
-impl Clone for SshService {
-    fn clone(&self) -> Self {
-        SshService {
-            client: Arc::clone(&self.client),
-        }
     }
 }
