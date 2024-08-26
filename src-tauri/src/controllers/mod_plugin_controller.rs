@@ -32,12 +32,11 @@ impl serde::Serialize for ModPluginControllerError {
 #[tauri::command]
 pub async fn get_plugins() -> Result<Vec<String>, ModPluginControllerError> {
     let ssh_service = SshService::connect("192.168.51.1", "root", "mod").await?;
-    let response = ssh_service.execute_command("ls .lv2", None).await?;
-    if response.stdout.is_empty() {
+    let stdout = ssh_service.execute_command("ls .lv2", None).await?;
+    if stdout.is_empty() {
         Err(ModPluginControllerError::NotFound)
     } else {
-        let plugins = response
-            .stdout
+        let plugins = stdout
             .split("\n")
             .map(|item| item.to_string())
             .filter(|item| !item.is_empty())

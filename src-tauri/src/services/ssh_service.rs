@@ -24,6 +24,9 @@ pub enum SshError {
 
     #[error("The executed command didn't send an exit code")]
     CommandDidntExit,
+
+    #[error("Ssh command error: {0}")]
+    CommandError(String),
 }
 
 struct ClientHandler;
@@ -63,7 +66,7 @@ impl SshService {
         &self,
         command: &str,
         stdin_data: Option<&[u8]>,
-    ) -> Result<CommandExecutedResult, SshError> {
+    ) -> Result<String, SshError> {
         let mut stdout_buffer = vec![];
         let mut stderr_buffer = vec![];
         let mut exit_status_result: Option<u32> = None;
@@ -95,11 +98,13 @@ impl SshService {
         }
 
         if let Some(exit_status_result) = exit_status_result {
-            Ok(CommandExecutedResult {
-                stdout: String::from_utf8_lossy(&stdout_buffer).to_string(),
-                stderr: String::from_utf8_lossy(&stderr_buffer).to_string(),
-                exit_status: exit_status_result,
-            })
+            if exit_status_result != 0 {
+                let stderr = String::from_utf8_lossy(&stderr_buffer).to_string();
+                Err(SshError::CommandError(stderr))
+            } else {
+                let stdout = String::from_utf8_lossy(&stdout_buffer).to_string();
+                Ok(stdout)
+            }
         } else {
             Err(SshError::CommandDidntExit)
         }
