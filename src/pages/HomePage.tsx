@@ -111,7 +111,7 @@ export function HomePage() {
   if (isFetching) {
     return (
       <div className="rounded-2xl">
-        <div className="w-full bg-black py-6">
+        <div className="sticky top-0 w-full border-b-2 border-white bg-black py-6 z-10">
           <h3 className="text-3xl tracking-wide">MOD plugins</h3>
           <div className="animate-pulse">
             <div
@@ -120,7 +120,7 @@ export function HomePage() {
             />
           </div>
         </div>
-        <ul className="grid animate-pulse grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+        <ul className="mt-6 grid animate-pulse grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
           {Array(36)
             .fill(1)
             .map((_, i) => {
@@ -137,7 +137,7 @@ export function HomePage() {
   }
   return (
     <div className="rounded-2xl">
-      <div className="sticky top-0 w-full border-b-2 border-white bg-black py-6">
+      <div className="sticky top-0 w-full border-b-2 border-white bg-black py-6 z-10">
         <div className="flex justify-between">
           <h3 className="text-3xl tracking-wide">MOD plugins</h3>
           <button
