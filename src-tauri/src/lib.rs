@@ -1,8 +1,8 @@
 use tauri::Manager;
 use tauri_plugin_log::{Target, TargetKind};
-#[path = "./controllers/plugin_controller.rs"]
-mod plugin_controller;
-use plugin_controller::{create_plugins, delete_plugin, get_plugins};
+#[path = "./controllers/mod_plugin_controller.rs"]
+mod mod_plugin_controller;
+use mod_plugin_controller::{create_plugins, delete_plugin, get_plugins};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {

@@ -119,14 +119,14 @@ export function HomePage() {
             />
           </div>
         </div>
-        <ul className="mt-6 animate-pulse columns-1 sm:columns-2 lg:columns-3 2xl:columns-4 gap-2">
+        <ul className="grid animate-pulse grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
           {Array(36)
             .fill(1)
             .map((_, i) => {
               return (
                 <li
                   key={i}
-                  className="mb-2 last:mb-0 flex h-12 w-full items-center rounded-lg border-2 border-white bg-gray-200 px-2 py-1 text-lg"
+                  className="flex h-12 w-full items-center rounded-lg border-2 border-white bg-gray-200 px-2 py-1 text-lg"
                 />
               );
             })}
@@ -155,7 +155,7 @@ export function HomePage() {
           className="w-1/3 min-w-60 rounded-xl"
         />
       </div>
-      <ul className="mt-6 columns-1 sm:columns-2 lg:columns-3 2xl:columns-4 gap-2">
+      <ul className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
         {plugins?.map((name) => {
           return (
             <Plugin
@@ -163,7 +163,6 @@ export function HomePage() {
               name={name}
               onRemove={removePlugin}
               isRemoving={removals.includes(name)}
-              className="mb-2 last:mb-0"
             />
           );
         })}

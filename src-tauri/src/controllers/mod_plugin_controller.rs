@@ -12,7 +12,7 @@ pub struct File {
 }
 
 #[derive(Error, Debug)]
-pub enum PluginControllerError {
+pub enum ModPluginControllerError {
     #[error("{0}")]
     SshError(#[from] SshError),
 
@@ -20,7 +20,7 @@ pub enum PluginControllerError {
     NotFound,
 }
 
-impl serde::Serialize for PluginControllerError {
+impl serde::Serialize for ModPluginControllerError {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::ser::Serializer,
@@ -30,16 +30,17 @@ impl serde::Serialize for PluginControllerError {
 }
 
 #[tauri::command]
-pub async fn get_plugins() -> Result<Vec<String>, PluginControllerError> {
+pub async fn get_plugins() -> Result<Vec<String>, ModPluginControllerError> {
     let ssh_service = SshService::connect("192.168.51.1", "root", "mod").await?;
     let response = ssh_service.execute_command("ls .lv2", None).await?;
     if response.stdout.is_empty() {
-        Err(PluginControllerError::NotFound)
+        Err(ModPluginControllerError::NotFound)
     } else {
         let plugins = response
             .stdout
             .split("\n")
             .map(|item| item.to_string())
+            .filter(|item| !item.is_empty())
             .collect();
         ssh_service.disconnect().await?;
         Ok(plugins)
@@ -47,7 +48,7 @@ pub async fn get_plugins() -> Result<Vec<String>, PluginControllerError> {
 }
 
 #[tauri::command]
-pub async fn create_plugins(files: Vec<File>) -> Result<Vec<String>, PluginControllerError> {
+pub async fn create_plugins(files: Vec<File>) -> Result<Vec<String>, ModPluginControllerError> {
     let mut plugin_names: Vec<String> = Vec::new();
     let ssh_service = SshService::connect("192.168.51.1", "root", "mod").await?;
 
@@ -75,7 +76,7 @@ pub async fn create_plugins(files: Vec<File>) -> Result<Vec<String>, PluginContr
 }
 
 #[tauri::command]
-pub async fn delete_plugin(name: String) -> Result<(), PluginControllerError> {
+pub async fn delete_plugin(name: String) -> Result<(), ModPluginControllerError> {
     let ssh_service = SshService::connect("192.168.51.1", "root", "mod").await?;
     ssh_service
         .execute_command(&format!("rm -rf .lv2/{}", name), None)
