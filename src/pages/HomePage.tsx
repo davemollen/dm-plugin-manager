@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { DropZone, DropZoneFile } from "@/components/DropZone";
 import { useBrowserSupport } from "@/hooks/useBrowserSupport";
 import { useToast } from "@/hooks/useToast";
@@ -20,7 +20,7 @@ export function HomePage() {
   const { supportsWebkitGetAsEntry } = useBrowserSupport();
   const toast = useToast();
 
-  const getPlugins = useCallback(async function () {
+  async function getPlugins() {
     try {
       setIsFetching(true);
       setModIsDisconnected(false);
@@ -31,7 +31,7 @@ export function HomePage() {
     } finally {
       setIsFetching(false);
     }
-  }, []);
+  }
 
   async function addPlugins(dropZoneFiles: DropZoneFile[]) {
     try {
@@ -90,7 +90,7 @@ export function HomePage() {
   function handleErrors(err: unknown) {
     const e = err as string;
     error("Handle error log: " + e);
-    if (e.startsWith("Invalid address was provided: ")) {
+    if (e === "Ssh connection timed out") {
       setModIsDisconnected(true);
     } else {
       toast?.error(e);
@@ -99,7 +99,8 @@ export function HomePage() {
 
   useEffect(() => {
     getPlugins();
-  }, [getPlugins]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (supportsWebkitGetAsEntry === false) {
     return <UnsupportedBrowser />;
@@ -111,7 +112,7 @@ export function HomePage() {
     return (
       <div className="rounded-2xl">
         <div className="w-full bg-black py-6">
-          <h3 className="text-3xl tracking-wide">Plugins</h3>
+          <h3 className="text-3xl tracking-wide">MOD plugins</h3>
           <div className="animate-pulse">
             <div
               className="mt-6 h-24 w-1/3 min-w-60 rounded-lg bg-gray-200"
@@ -138,7 +139,7 @@ export function HomePage() {
     <div className="rounded-2xl">
       <div className="sticky top-0 w-full border-b-2 border-white bg-black py-6">
         <div className="flex justify-between">
-          <h3 className="text-3xl tracking-wide">Plugins</h3>
+          <h3 className="text-3xl tracking-wide">MOD plugins</h3>
           <button
             onClick={getPlugins}
             className="flex gap-2 hover:text-blue-400"

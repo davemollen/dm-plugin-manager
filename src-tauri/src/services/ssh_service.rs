@@ -1,21 +1,12 @@
 use async_trait::async_trait;
 use futures::AsyncWriteExt;
-use russh::client::{connect, Handle, Handler};
+use russh::client::{connect, Config, Handle, Handler};
 use russh::keys::key;
 use russh::Disconnect;
 use std::sync::Arc;
 use std::time::Duration;
 use thiserror::Error;
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct CommandExecutedResult {
-    /// The stdout output of the command.
-    pub stdout: String,
-    /// The stderr output of the command.
-    pub stderr: String,
-    /// The unix exit status (`$?` in bash).
-    pub exit_status: u32,
-}
+use tokio::time::timeout;
 
 #[derive(Error, Debug)]
 pub enum SshError {
@@ -27,6 +18,9 @@ pub enum SshError {
 
     #[error("Ssh command error: {0}")]
     CommandError(String),
+
+    #[error("Ssh connection timed out")]
+    ConnectionTimeoutError,
 }
 
 struct ClientHandler;
@@ -49,17 +43,20 @@ pub struct SshService {
 
 impl SshService {
     pub async fn connect(url: &str, username: &str, password: &str) -> Result<Self, SshError> {
-        let config = Arc::new(russh::client::Config {
-            inactivity_timeout: Some(Duration::from_secs(5)),
-            ..Default::default()
-        });
+        let future = async {
+            let config = Arc::new(Config::default());
+            let mut session = connect(config, (url, 22), ClientHandler {}).await?;
+            session.authenticate_password(username, password).await?;
 
-        let mut session = connect(config, (url, 22), ClientHandler {}).await?;
-        session.authenticate_password(username, password).await?;
+            Ok(SshService {
+                client: Arc::new(session),
+            })
+        };
 
-        Ok(SshService {
-            client: Arc::new(session),
-        })
+        match timeout(Duration::from_secs(5), future).await {
+            Ok(result) => result,
+            Err(_) => Err(SshError::ConnectionTimeoutError),
+        }
     }
 
     pub async fn execute_command(
