@@ -17,7 +17,8 @@ export const ToastContextProvider = ({ children }: { children: ReactNode }) => {
   });
 
   function addToast(message: string, type: "success" | "error") {
-    const id = Date.now().toLocaleString();
+    const id = Date.now().toString();
+
     dispatch({
       type: ActionType.ADD_TOAST,
       payload: { id, message, type },

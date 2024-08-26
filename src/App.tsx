@@ -14,7 +14,7 @@ function App() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-2 md:p-4 lg:p-8 xl:p-16">
-      <div className="relative w-full max-w-screen-2xl items-center justify-between font-mono text-base">
+      <div className="w-full max-w-screen-2xl items-center justify-between font-mono text-base">
         <ToastContextProvider>
           <HomePage />
         </ToastContextProvider>
