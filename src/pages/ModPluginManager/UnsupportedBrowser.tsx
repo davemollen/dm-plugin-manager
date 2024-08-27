@@ -11,7 +11,7 @@ export function UnsupportedBrowser() {
         <li>
           Type in the following:
           <div className="ml-7">
-            <span className="my-1 flex rounded-md bg-black p-2">
+            <span className="my-1 flex rounded-md bg-gray-200 text-black p-2">
               {"scp -O -rp <path-to-.lv2> root@moddwarf.local:/root/.lv2/"}
             </span>
             This will copy the folder from your system to your MOD. Make sure

@@ -111,7 +111,7 @@ export function ModPluginManager() {
   if (isFetching) {
     return (
       <div className="rounded-2xl">
-        <div className="sticky top-0 w-full border-b-2 border-gray-600 bg-black pt-4 pb-6 z-10 -mt-4">
+        <div className="sticky top-0 w-full border-b-2 border-gray-600 bg-black py-6 z-10 -mt-6">
           <div
             className="h-24 w-1/3 min-w-60 rounded-lg bg-gray-200 animate-pulse"
             onClick={getPlugins}
@@ -135,7 +135,7 @@ export function ModPluginManager() {
   }
   return (
     <div className="rounded-2xl">
-      <div className="sticky top-0 w-full border-b-2 border-white bg-black py-6 z-10">
+      <div className="sticky top-0 w-full border-b-2 border-white bg-black py-6 z-10 -mt-6">
         <div className="flex justify-between">
           <button
             onClick={getPlugins}
