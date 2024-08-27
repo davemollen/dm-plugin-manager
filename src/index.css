@@ -3,19 +3,41 @@
 @tailwind utilities;
 
 :root {
-    @apply bg-black text-white;
-  
-    font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-    font-size: 16px;
-    line-height: 24px;
-    font-weight: 400;
-    font-synthesis: none;
-    text-rendering: optimizeLegibility;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    -webkit-text-size-adjust: 100%;
+  @apply bg-background text-foreground;
+
+  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+
+  --colors-background: #f9fafb;
+  --colors-foreground: #000;
+  --colors-cta: #164e63;
+  --colors-cta-hover: #0e7490;
+  --colors-link: #2563eb;
+  --colors-divider: #4b5563;
+  --colors-nav-item-background: #e5e7eb;
+  --colors-panel: #111827;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --colors-background: #000;
+    --colors-foreground: #f9fafb;
+    --colors-cta: #0e7490;
+    --colors-cta-hover: #06b6d4;
+    --colors-link: #60a5fa;
+    --colors-divider: ##d1d5db;
+    --colors-nav-item-background: #000;
+    --colors-panel: #e5e7eb;
+  }
 }
 
 body:has(#small-nav.flex) {
-    @apply overflow-hidden;
+  @apply overflow-hidden;
 }

@@ -33,13 +33,13 @@ export function SmallNavigation({
       </button>
       <nav
         id="small-nav"
-        className={`font-sans text-lg font-semibold w-full h-screen flex-col ${smallMenuIsOpen && activeBreakPoint === undefined ? "flex" : "hidden"}`}
+        className={`font-sans mt-4 text-xl font-semibold w-full h-screen flex-col ${smallMenuIsOpen && activeBreakPoint === undefined ? "flex" : "hidden"}`}
       >
         <NavLink
           to="/"
           onClick={closeSmallMenu}
           className={({ isActive }) =>
-            `relative py-3 px-6 hover:text-blue-400 ${isActive ? "text-blue-400 before:absolute before:top-0 before:left-0 before:bottom-0 before:w-1 before:bg-blue-400" : "text-white"}`
+            `relative py-3 px-6 hover:text-link ${isActive ? "bg-navItemBackground text-link before:absolute before:top-0 before:left-0 before:bottom-0 before:w-1 before:bg-blue-400" : ""}`
           }
         >
           Plugin manager
@@ -48,7 +48,7 @@ export function SmallNavigation({
           to="/mod-plugin-manager"
           onClick={closeSmallMenu}
           className={({ isActive }) =>
-            `relative py-3 px-6 hover:text-blue-400 ${isActive ? "text-blue-400 before:absolute before:top-0 before:left-0 before:bottom-0 before:w-1 before:bg-blue-400" : "text-white"}`
+            `relative py-3 px-6 hover:text-link ${isActive ? "bg-navItemBackground text-link before:absolute before:top-0 before:left-0 before:bottom-0 before:w-1 before:bg-blue-400" : ""}`
           }
         >
           MOD plugin manager

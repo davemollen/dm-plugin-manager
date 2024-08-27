@@ -1,9 +1,9 @@
 import { ButtonHTMLAttributes, DetailedHTMLProps } from "react";
 
 const style: Record<NonNullable<ButtonProps["kind"]>, string> = {
-  primary: "bg-cyan-700 hover:bg-cyan-500 text-white hover:shadow-cyan-500/20",
+  primary: "bg-cta hover:bg-ctaHover text-white hover:shadow-cta/20",
   secondary:
-    "bg-black hover:bg-white/10 border-2 border-white text-white hover:shadow-white/20",
+    "bg-background hover:bg-foreground/10 border-2 border-foreground text-foreground hover:shadow-foreground/20",
 };
 
 export interface ButtonProps

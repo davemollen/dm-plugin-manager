@@ -165,13 +165,13 @@ export function DropZone({
         role="button"
         aria-label="dropzone"
         tabIndex={0}
-        className={`relative min-h-32 mt-6 flex flex-col items-center justify-center border-2 border-dashed p-4 text-center ${
+        className={`relative min-h-32 flex flex-col items-center justify-center border-2 border-dashed p-4 text-center ${
           !!error
             ? "border-red-600 text-red-600"
             : isDragging && !disabled
-              ? "border-blue-400 text-blue-400"
-              : "border-white text-white"
-        } ${disabled ? "opacity-50 cursor-not-allowed" : "opacity-100 cursor-pointer hover:border-blue-400 hover:text-blue-400"} ${className ?? ""}`.trim()}
+              ? "border-blue-400 text-link"
+              : "border-foreground text-foreground"
+        } ${disabled ? "opacity-50 cursor-not-allowed" : "opacity-100 cursor-pointer hover:border-blue-400 hover:text-link"} ${className ?? ""}`.trim()}
         onSubmit={(e) => e.preventDefault()}
         onDrop={onDrop}
         onDragLeave={onDragLeave}

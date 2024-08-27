@@ -34,17 +34,14 @@ export function Plugin({
     <>
       <li
         key={name}
-        className={`flex h-12 w-full items-center justify-between rounded-xl border-2 border-white px-2 py-1 text-lg ${className ?? ""}`.trim()}
+        className={`flex h-12 w-full items-center justify-between rounded-xl border-2 border-foreground px-2 py-1 text-lg ${className ?? ""}`.trim()}
       >
-        {name}
+        <span className="truncate">{name}</span>
         <button onClick={onButtonClick}>
           {isRemoving ? (
             <FontAwesomeIcon icon={faSpinner} className="animate-spin" />
           ) : (
-            <FontAwesomeIcon
-              icon={faTrashCan}
-              className="hover:text-blue-400"
-            />
+            <FontAwesomeIcon icon={faTrashCan} className="hover:text-link" />
           )}
         </button>
       </li>

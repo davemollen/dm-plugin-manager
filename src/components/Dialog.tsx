@@ -40,11 +40,11 @@ export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(
         {...props}
         ref={ref}
         onClick={onDialogClick}
-        className={`rounded-xl border-0 p-0 backdrop:bg-black/75 ${dialogProps.className ?? ""}`.trim()}
+        className={`rounded-xl border-0 p-0 backdrop:bg-background/75 ${dialogProps.className ?? ""}`.trim()}
       >
         <form
           method="dialog"
-          className="max-w-xl rounded-xl border-2 border-white bg-black p-4 text-white"
+          className="max-w-xl rounded-xl border-2 border-foreground bg-background p-4 text-foreground"
         >
           <h3 className="text-2xl font-bold">{heading}</h3>
           <p className="mt-2">{body}</p>
@@ -58,5 +58,5 @@ export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(
         </form>
       </dialog>
     );
-  },
+  }
 );
