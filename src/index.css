@@ -20,7 +20,6 @@
   --colors-cta: #164e63;
   --colors-cta-hover: #0e7490;
   --colors-link: #2563eb;
-  --colors-divider: #4b5563;
   --colors-nav-item-background: #e5e7eb;
   --colors-panel: #111827;
 }
@@ -32,7 +31,6 @@
     --colors-cta: #0e7490;
     --colors-cta-hover: #06b6d4;
     --colors-link: #60a5fa;
-    --colors-divider: ##d1d5db;
     --colors-nav-item-background: #000;
     --colors-panel: #e5e7eb;
   }

@@ -110,8 +110,8 @@ export function ModPluginManager() {
   }
   if (isFetching) {
     return (
-      <div className="rounded-2xl">
-        <div className="sticky flex top-0 w-full border-b-2 border-divider bg-background py-6 z-10 -mt-6">
+      <div>
+        <div className="sticky flex top-0 w-full border-b-2 border-foreground bg-background py-6 z-10 -mt-6">
           <div
             className="h-32 w-1/3 min-w-60 rounded-lg bg-gray-200 animate-pulse"
             onClick={getPlugins}
@@ -134,7 +134,7 @@ export function ModPluginManager() {
     );
   }
   return (
-    <div className="rounded-2xl">
+    <div>
       <div className="sticky flex top-0 w-full border-b-2 border-foreground bg-background py-6 z-10 -mt-6">
         <DropZone
           onChange={addPlugins}

@@ -2,7 +2,7 @@ import { NavLink } from "react-router-dom";
 
 export function DefaultNavigation() {
   return (
-    <nav className="sticky top-0 w-48 h-screen flex-col font-sans text-lg font-semibold text-blue-gray-700 border-r-2 border-divider sm:flex hidden">
+    <nav className="sticky top-0 w-48 h-screen flex-col font-sans text-lg font-semibold text-blue-gray-700 border-r-2 border-foreground sm:flex hidden">
       <NavLink
         to="/"
         className={({ isActive }) =>
