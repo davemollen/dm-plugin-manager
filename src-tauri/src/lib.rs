@@ -2,7 +2,7 @@ use tauri::Manager;
 use tauri_plugin_log::{Target, TargetKind};
 #[path = "./controllers/mod_plugin_controller.rs"]
 mod mod_plugin_controller;
-use mod_plugin_controller::{create_plugins, delete_plugin, get_plugins};
+use mod_plugin_controller::{create_mod_plugins, delete_mod_plugin, get_mod_plugins};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -23,9 +23,9 @@ pub fn run() {
                 .build(),
         )
         .invoke_handler(tauri::generate_handler![
-            get_plugins,
-            create_plugins,
-            delete_plugin
+            get_mod_plugins,
+            create_mod_plugins,
+            delete_mod_plugin
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

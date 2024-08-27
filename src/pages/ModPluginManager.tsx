@@ -24,7 +24,7 @@ export function ModPluginManager() {
     try {
       setIsFetching(true);
       setModIsDisconnected(false);
-      const plugins = await invoke<string[]>("get_plugins");
+      const plugins = await invoke<string[]>("get_mod_plugins");
       setPlugins(plugins);
     } catch (e) {
       handleErrors(e);
@@ -44,9 +44,9 @@ export function ModPluginManager() {
             path: file.path || file.webkitRelativePath,
             buffer: Array.from(new Uint8Array(arrayBuffer)),
           };
-        })
+        }),
       );
-      const createdPlugins = await invoke<string[]>("create_plugins", {
+      const createdPlugins = await invoke<string[]>("create_mod_plugins", {
         files,
       });
       if (plugins) {
@@ -55,9 +55,9 @@ export function ModPluginManager() {
             .reduce(
               (result, item) =>
                 result.includes(item) ? result : [...result, item],
-              [...plugins]
+              [...plugins],
             )
-            .sort()
+            .sort(),
         );
       }
 
@@ -73,7 +73,7 @@ export function ModPluginManager() {
     try {
       setRemovals([...removals, name]);
       setModIsDisconnected(false);
-      await invoke<void>("delete_plugin", {
+      await invoke<void>("delete_mod_plugin", {
         name,
       });
       if (plugins) {
@@ -111,9 +111,9 @@ export function ModPluginManager() {
   if (isFetching) {
     return (
       <div>
-        <div className="sticky flex top-0 w-full border-b-2 border-foreground bg-background py-6 z-10 -mt-6">
+        <div className="sticky top-0 z-10 -mt-6 flex w-full border-b-2 border-foreground bg-background py-6">
           <div
-            className="h-32 w-1/3 min-w-60 rounded-lg bg-gray-200 animate-pulse"
+            className="h-32 w-1/3 min-w-60 animate-pulse rounded-lg bg-gray-200"
             onClick={getPlugins}
           />
         </div>
@@ -135,7 +135,7 @@ export function ModPluginManager() {
   }
   return (
     <div>
-      <div className="sticky flex top-0 w-full border-b-2 border-foreground bg-background py-6 z-10 -mt-6">
+      <div className="sticky top-0 z-10 -mt-6 flex w-full border-b-2 border-foreground bg-background py-6">
         <DropZone
           onChange={addPlugins}
           allowedFileTypes={[".lv2"]}
@@ -145,7 +145,7 @@ export function ModPluginManager() {
         />
         <button
           onClick={getPlugins}
-          className="flex flex-1 gap-2 hover:text-link justify-end"
+          className="flex flex-1 justify-end gap-2 hover:text-link"
         >
           <span>Refresh</span>
           <FontAwesomeIcon icon={faRefresh} size="xl" />

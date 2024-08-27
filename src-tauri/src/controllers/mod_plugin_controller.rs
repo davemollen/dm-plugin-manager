@@ -30,7 +30,7 @@ impl serde::Serialize for ModPluginControllerError {
 }
 
 #[tauri::command]
-pub async fn get_plugins() -> Result<Vec<String>, ModPluginControllerError> {
+pub async fn get_mod_plugins() -> Result<Vec<String>, ModPluginControllerError> {
     let ssh_service = SshService::connect("192.168.51.1", "root", "mod").await?;
     let stdout = ssh_service.execute_command("ls .lv2", None).await?;
     if stdout.is_empty() {
@@ -47,7 +47,7 @@ pub async fn get_plugins() -> Result<Vec<String>, ModPluginControllerError> {
 }
 
 #[tauri::command]
-pub async fn create_plugins(files: Vec<File>) -> Result<Vec<String>, ModPluginControllerError> {
+pub async fn create_mod_plugins(files: Vec<File>) -> Result<Vec<String>, ModPluginControllerError> {
     let mut plugin_names: Vec<String> = Vec::new();
     let ssh_service = SshService::connect("192.168.51.1", "root", "mod").await?;
 
@@ -75,7 +75,7 @@ pub async fn create_plugins(files: Vec<File>) -> Result<Vec<String>, ModPluginCo
 }
 
 #[tauri::command]
-pub async fn delete_plugin(name: String) -> Result<(), ModPluginControllerError> {
+pub async fn delete_mod_plugin(name: String) -> Result<(), ModPluginControllerError> {
     let ssh_service = SshService::connect("192.168.51.1", "root", "mod").await?;
     ssh_service
         .execute_command(&format!("rm -rf .lv2/{}", name), None)
