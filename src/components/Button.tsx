@@ -18,7 +18,7 @@ export function Button({ kind = "primary", ...props }: ButtonProps) {
   return (
     <button
       {...props}
-      className={`flex h-12 items-center rounded-lg px-6 font-sans text-lg font-bold shadow-md ${style[kind]} ${
+      className={`flex h-12 items-center rounded-lg px-6 font-sans text-lg font-bold shadow-md ${style[kind]} disabled:cursor-not-allowed disabled:opacity-50 ${
         props.className ?? ""
       }`}
     />

@@ -1,4 +1,4 @@
-import { ChangeEvent, useEffect, useRef } from "react";
+import { ChangeEvent, ReactNode, RefObject, useEffect, useRef } from "react";
 import { Checkbox } from "./Checkbox";
 
 export function CheckboxList<T extends string>({
@@ -6,12 +6,17 @@ export function CheckboxList<T extends string>({
   items,
   selectedItems,
   onChange,
+  overrideCheckAllComponent,
   className,
 }: {
   title: string;
   items: T[];
   selectedItems: T[];
   onChange: (selectedItems: T[]) => void;
+  overrideCheckAllComponent?: (
+    ref: RefObject<HTMLInputElement>,
+    onCheckAll: (event: ChangeEvent<HTMLInputElement>) => void,
+  ) => ReactNode;
   className?: string;
 }) {
   const ref = useRef<HTMLInputElement>(null);
@@ -47,7 +52,11 @@ export function CheckboxList<T extends string>({
 
   return (
     <div className={`flex flex-col gap-2 ${className ?? ""}`.trim()}>
-      <Checkbox ref={ref} id={title} name={title} onChange={onCheckAll} />
+      {overrideCheckAllComponent ? (
+        overrideCheckAllComponent(ref, onCheckAll)
+      ) : (
+        <Checkbox ref={ref} id={title} name={title} onChange={onCheckAll} />
+      )}
       {items.map((item) => (
         <Checkbox
           key={item}
