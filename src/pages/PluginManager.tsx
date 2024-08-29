@@ -185,7 +185,7 @@ export function PluginManager() {
               className="mt-4"
             />
           )}
-          {hasModPlugins && (
+          {plugins.modIsConnected && hasModPlugins && (
             <CheckboxList
               title={selectedModPlatform}
               items={plugins?.["MOD Audio"][selectedModPlatform]}
@@ -199,15 +199,13 @@ export function PluginManager() {
                   },
                 });
               }}
-              disabled={plugins.modIsConnected === false}
-              overrideCheckAllComponent={(ref, onCheckAll, disabled) => (
+              overrideCheckAllComponent={(ref, onCheckAll) => (
                 <div className="-ml-8">
                   <Checkbox
                     ref={ref}
-                    id={"MOD Audio"}
-                    name={"MOD Audio"}
+                    id="MOD Audio"
+                    name="MOD Audio"
                     onChange={onCheckAll}
-                    disabled={disabled}
                   />
                   <RadioButtonList
                     groupName="MOD Audio"
@@ -220,7 +218,6 @@ export function PluginManager() {
                         ["MOD Audio"]: selectModAudioPlugins(plugins, item),
                       });
                     }}
-                    disabled={disabled}
                     className="ml-4 mt-2"
                   />
                 </div>
@@ -229,7 +226,16 @@ export function PluginManager() {
             />
           )}
           {plugins.modIsConnected === false && (
-            <DisconnectedMod reconnect={fetchPlugins} />
+            <>
+              <Checkbox
+                id="MOD Audio"
+                name="MOD Audio"
+                onChange={() => {}}
+                disabled={true}
+                className="mt-4"
+              />
+              <DisconnectedMod reconnect={fetchPlugins} />
+            </>
           )}
 
           <Button

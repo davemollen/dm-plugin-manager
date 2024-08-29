@@ -14,12 +14,12 @@ export interface ButtonProps
   kind?: "primary" | "secondary";
 }
 
-export function Button({ kind = "primary", ...props }: ButtonProps) {
+export function Button({ kind = "primary", className, ...props }: ButtonProps) {
   return (
     <button
       {...props}
       className={`flex h-12 items-center rounded-lg px-6 font-sans text-lg font-bold shadow-md ${style[kind]} disabled:cursor-default disabled:opacity-50 ${
-        props.className ?? ""
+        className ?? ""
       }`}
     />
   );

@@ -7,14 +7,14 @@ export default {
   theme: {
     extend: {
       colors: {
-        background: "var(--colors-background)",
-        foreground: "var(--colors-foreground)",
-        cta: "var(--colors-cta)",
-        ctaHover: "var(--colors-cta-hover)",
-        link: "var(--colors-link)",
-        navItemBackground: "var(--colors-nav-item-background)",
-        codebox: "var(--colors-codebox)",
-        panel: "var(--colors-panel)"
+        background: "var(--color-background)",
+        foreground: "var(--color-foreground)",
+        cta: "var(--color-cta)",
+        ctaHover: "var(--color-cta-hover)",
+        link: "var(--color-link)",
+        navItemBackground: "var(--color-nav-item-background)",
+        codebox: "var(--color-codebox)",
+        panel: "var(--color-panel)"
       }
     },
   },

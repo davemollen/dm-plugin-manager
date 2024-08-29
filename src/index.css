@@ -15,26 +15,26 @@
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
 
-  --colors-background: #f9fafb;
-  --colors-foreground: #000;
-  --colors-cta: #164e63;
-  --colors-cta-hover: #0e7490;
-  --colors-link: #2563eb;
-  --colors-nav-item-background: #e5e7eb;
-  --colors-codebox: #111827;
-  --colors-panel: #e5e7eb;
+  --color-background: #f9fafb;
+  --color-foreground: #000;
+  --color-cta: #164e63;
+  --color-cta-hover: #0e7490;
+  --color-link: #2563eb;
+  --color-nav-item-background: #e5e7eb;
+  --color-codebox: #111827;
+  --color-panel: #e5e7eb;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --colors-background: #000;
-    --colors-foreground: #f9fafb;
-    --colors-cta: #0e7490;
-    --colors-cta-hover: #06b6d4;
-    --colors-link: #60a5fa;
-    --colors-nav-item-background: #000;
-    --colors-codebox: #e5e7eb;
-    --colors-panel: #374151;
+    --color-background: #000;
+    --color-foreground: #f9fafb;
+    --color-cta: #0e7490;
+    --color-cta-hover: #06b6d4;
+    --color-link: #60a5fa;
+    --color-nav-item-background: #000;
+    --color-codebox: #e5e7eb;
+    --color-panel: #374151;
   }
 }
 
