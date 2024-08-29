@@ -12,7 +12,7 @@ use tauri::utils::platform;
 use thiserror::Error;
 use zip_service::ZipService;
 
-use crate::mod_plugin_controller;
+use crate::mod_plugin_controller::{self, ssh_service::SshError};
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -49,21 +49,24 @@ impl serde::Serialize for Error {
 
 #[tauri::command]
 pub async fn get_installable_plugins() -> Result<HashMap<String, serde_json::Value>, Error> {
-    // make api call
-    // the api checks what plugins are available
+    // TODO make new api to checks what plugins are available
     let mut data: HashMap<String, serde_json::Value> = HashMap::new();
 
     let mut mod_audio: HashMap<String, Vec<String>> = HashMap::new();
-    if mod_plugin_controller::establish_connection().await.is_ok() {
-        data.insert("modIsConnected".to_string(), json!(true));
-        mod_audio.insert(
-            "Dwarf".to_string(),
-            vec!["dm-LFO".to_string(), "dm-Stutter".to_string()],
-        );
-        mod_audio.insert("Duo".to_string(), vec!["dm-LFO".to_string()]);
-    } else {
-        data.insert("modIsConnected".to_string(), json!(false));
-    }
+
+    let result = mod_plugin_controller::establish_connection().await;
+    match result {
+        Err(mod_plugin_controller::Error::Ssh(SshError::NoConnection)) => {
+            data.insert("modIsConnected".to_string(), json!(false));
+            Ok(())
+        }
+        _ => result,
+    }?;
+    mod_audio.insert(
+        "Dwarf".to_string(),
+        vec!["dm-LFO".to_string(), "dm-Stutter".to_string()],
+    );
+    mod_audio.insert("Duo".to_string(), vec!["dm-LFO".to_string()]);
 
     // Adding the "MOD Audio" entry
     data.insert("MOD Audio".to_string(), json!(mod_audio));
@@ -83,43 +86,6 @@ pub async fn get_installable_plugins() -> Result<HashMap<String, serde_json::Val
 pub async fn get_installed_plugins() -> Result<HashMap<String, serde_json::Value>, Error> {
     let mut installed_plugins: HashMap<String, serde_json::Value> = HashMap::new();
     let installable_plugins = get_installable_plugins().await?;
-
-    if let Some(mod_value) = installable_plugins.get("MOD Audio") {
-        if let Value::Object(mod_map) = mod_value {
-            for (platform, value) in mod_map {
-                if let Value::Array(plugins) = value {
-                    if !plugins.is_empty() {
-                        if let Ok(all_plugins) = mod_plugin_controller::get_mod_plugins().await {
-                            let found_plugins = plugins
-                                .iter()
-                                .filter(|plugin| {
-                                    if let Some(plugin_name) = plugin.as_str() {
-                                        all_plugins.contains(&plugin_name.to_string())
-                                    } else {
-                                        false
-                                    }
-                                })
-                                .map(|item| item.to_owned())
-                                .collect();
-
-                            let mut installable_mod_map = Map::new();
-                            installed_plugins.insert("modIsConnected".to_string(), json!(true));
-                            installable_mod_map
-                                .insert(platform.to_string(), Value::Array(found_plugins));
-                            installed_plugins.insert(
-                                "MOD Audio".to_string(),
-                                Value::Object(installable_mod_map),
-                            );
-                        } else {
-                            installed_plugins.insert("modIsConnected".to_string(), json!(false));
-                            installed_plugins
-                                .insert("MOD Audio".to_string(), Value::Object(Map::new()));
-                        }
-                    }
-                }
-            }
-        }
-    }
 
     if let Some(vst3_value) = installable_plugins.get("VST3") {
         if let Value::Array(plugins) = vst3_value {
@@ -161,43 +127,52 @@ pub async fn get_installed_plugins() -> Result<HashMap<String, serde_json::Value
         }
     }
 
-    Ok(installed_plugins)
-}
-
-#[tauri::command]
-pub async fn create_plugins(plugins: HashMap<String, serde_json::Value>) -> Result<(), Error> {
-    if let Some(mod_value) = plugins.get("MOD Audio") {
+    if let Some(mod_value) = installable_plugins.get("MOD Audio") {
         if let Value::Object(mod_map) = mod_value {
             for (platform, value) in mod_map {
                 if let Value::Array(plugins) = value {
-                    if !plugins.is_empty() {
-                        // TODO: check if we can do these SSH operation concurrently
-                        let futures: Vec<_> = plugins
-                            .iter()
-                            .map(|plugin| async move {
-                                let plugin_name = plugin.as_str().unwrap();
-                                let mod_platform = platform.as_str();
-                                println!(
-                                    "Started installing MOD {} plugin: {}",
-                                    platform, plugin_name
-                                );
-                                create_mod_plugin(plugin_name, Some(mod_platform)).await?;
-                                println!(
-                                    "Finished installing MOD {} plugin: {}",
-                                    platform, plugin_name
-                                );
+                    installed_plugins.insert("MOD Audio".to_string(), Value::Object(Map::new()));
 
-                                Ok::<(), Error>(())
+                    if !plugins.is_empty() {
+                        let result = mod_plugin_controller::get_mod_plugins().await;
+                        let all_plugins = match result {
+                            Err(mod_plugin_controller::Error::Ssh(SshError::NoConnection)) => {
+                                installed_plugins
+                                    .insert("modIsConnected".to_string(), json!(false));
+                                return Ok(installed_plugins);
+                            }
+                            Err(e) => Err(Error::ModPluginControllerError(e)),
+                            Ok(plugins) => Ok(plugins),
+                        }?;
+
+                        let found_plugins = plugins
+                            .iter()
+                            .filter(|plugin| {
+                                if let Some(plugin_name) = plugin.as_str() {
+                                    all_plugins.contains(&plugin_name.to_string())
+                                } else {
+                                    false
+                                }
                             })
+                            .map(|item| item.to_owned())
                             .collect();
 
-                        join_all(futures).await;
+                        let mut installable_mod_map = Map::new();
+                        installable_mod_map
+                            .insert(platform.to_string(), Value::Array(found_plugins));
+                        installed_plugins
+                            .insert("MOD Audio".to_string(), Value::Object(installable_mod_map));
                     }
                 }
             }
         }
     }
 
+    Ok(installed_plugins)
+}
+
+#[tauri::command]
+pub async fn create_plugins(plugins: HashMap<String, serde_json::Value>) -> Result<(), Error> {
     if let Some(vst3_value) = plugins.get("VST3") {
         if let Value::Array(plugins) = vst3_value {
             if !plugins.is_empty() {
@@ -238,6 +213,38 @@ pub async fn create_plugins(plugins: HashMap<String, serde_json::Value>) -> Resu
         }
     }
 
+    if let Some(mod_value) = plugins.get("MOD Audio") {
+        if let Value::Object(mod_map) = mod_value {
+            for (platform, value) in mod_map {
+                if let Value::Array(plugins) = value {
+                    if !plugins.is_empty() {
+                        // TODO: check if we can do these SSH operation concurrently
+                        let futures: Vec<_> = plugins
+                            .iter()
+                            .map(|plugin| async move {
+                                let plugin_name = plugin.as_str().unwrap();
+                                let mod_platform = platform.as_str();
+                                println!(
+                                    "Started installing MOD {} plugin: {}",
+                                    platform, plugin_name
+                                );
+                                create_mod_plugin(plugin_name, Some(mod_platform)).await?;
+                                println!(
+                                    "Finished installing MOD {} plugin: {}",
+                                    platform, plugin_name
+                                );
+
+                                Ok::<(), Error>(())
+                            })
+                            .collect();
+
+                        join_all(futures).await;
+                    }
+                }
+            }
+        }
+    }
+
     Ok(())
 }
 
@@ -248,7 +255,7 @@ pub async fn delete_plugins(plugins: HashMap<String, serde_json::Value>) -> Resu
             for (platform, value) in mod_map {
                 if let Value::Array(plugins) = value {
                     if !plugins.is_empty() {
-                        // TODO: check if we can do these SSH operation concurrently
+                        // TODO: check if we can do these SSH operations concurrently
                         let futures: Vec<_> = plugins
                             .iter()
                             .map(|plugin| async move {

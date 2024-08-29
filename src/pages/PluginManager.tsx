@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/useToast";
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useState } from "react";
 import { DisconnectedMod } from "./PluginManager/DisconnectedMod";
+import { error, info } from "@tauri-apps/plugin-log";
 
 type Mode = "Install" | "Uninstall";
 type PluginFormat = "VST3" | "CLAP" | "MOD Audio";
@@ -18,7 +19,7 @@ type Plugins = {
     ? Record<ModPlatform, string[]>
     : string[];
 } & {
-  modIsConnected: boolean;
+  modIsConnected?: boolean;
 };
 
 const modes: Mode[] = ["Install", "Uninstall"];
@@ -30,7 +31,7 @@ const initialPlugins: Plugins = {
     "Duo X": [],
     Dwarf: [],
   },
-  modIsConnected: false,
+  modIsConnected: undefined,
 };
 
 export function PluginManager() {
@@ -69,6 +70,7 @@ export function PluginManager() {
       });
     } catch (e) {
       setPlugins(initialPlugins);
+      error(e as string);
       toast?.error(e as string);
     } finally {
       setIsFetching(false);
@@ -204,6 +206,7 @@ export function PluginManager() {
                     id={"MOD Audio"}
                     name={"MOD Audio"}
                     onChange={onCheckAll}
+                    disabled={plugins.modIsConnected === false}
                   />
                   <RadioButtonList
                     groupName="MOD Audio"
@@ -223,7 +226,7 @@ export function PluginManager() {
               className="ml-8 mt-4"
             />
           )}
-          {!plugins.modIsConnected && (
+          {plugins.modIsConnected === false && (
             <DisconnectedMod reconnect={fetchPlugins} />
           )}
 

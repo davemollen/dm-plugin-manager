@@ -1,7 +1,7 @@
 #[path = "../services/ssh_service.rs"]
-mod ssh_service;
+pub mod ssh_service;
 use serde::Deserialize;
-use ssh_service::{SshError, SshService};
+pub use ssh_service::{SshError, SshService};
 use std::path::{Path, PathBuf};
 use thiserror::Error;
 
@@ -14,7 +14,7 @@ pub struct ArrayBufWithPath {
 #[derive(Error, Debug)]
 pub enum Error {
     #[error("{0}")]
-    SshError(#[from] SshError),
+    Ssh(#[from] SshError),
 
     #[error("No plugins could be found.")]
     NoPlugins,

@@ -41,7 +41,7 @@ pub struct SshService {
 }
 
 impl SshService {
-    const CONNECTION_TIMEOUT: Duration = Duration::from_secs(5);
+    const CONNECTION_TIMEOUT: Duration = Duration::from_secs(3);
 
     pub async fn connect(url: &str, username: &str, password: &str) -> Result<Self, SshError> {
         let future = async {
