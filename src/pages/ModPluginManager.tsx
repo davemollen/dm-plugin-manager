@@ -61,7 +61,7 @@ export function ModPluginManager() {
         );
       }
 
-      toast?.success(`Added ${commaJoin(createdPlugins)}.`);
+      toast?.success(`Added ${commaJoin(createdPlugins)}`);
     } catch (e) {
       handleErrors(e);
     } finally {
@@ -79,7 +79,7 @@ export function ModPluginManager() {
       if (plugins) {
         setPlugins(plugins.filter((plugin) => plugin !== name));
       }
-      toast?.success(`Removed "${name}".`);
+      toast?.success(`Removed "${name}"`);
     } catch (e) {
       handleErrors(e);
     } finally {
@@ -90,7 +90,7 @@ export function ModPluginManager() {
   function handleErrors(err: unknown) {
     const e = err as string;
     error("Handle error log: " + e);
-    if (e === "Ssh connection timed out") {
+    if (e === "Unable to connect with MOD") {
       setModIsDisconnected(true);
     } else {
       toast?.error(e);
@@ -106,7 +106,7 @@ export function ModPluginManager() {
     return <UnsupportedBrowser />;
   }
   if (modIsDisconnected) {
-    return <DisconnectedMod getPlugins={getPlugins} />;
+    return <DisconnectedMod reconnect={getPlugins} />;
   }
   if (isFetching) {
     return (

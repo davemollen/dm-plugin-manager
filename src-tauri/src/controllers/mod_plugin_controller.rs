@@ -95,6 +95,11 @@ pub async fn delete_mod_plugin(name: String) -> Result<(), Error> {
     Ok(())
 }
 
+pub async fn establish_connection() -> Result<(), Error> {
+    SshService::connect("192.168.51.1", "root", "mod").await?;
+    Ok(())
+}
+
 fn convert_to_path_object(path: String) -> PathBuf {
     Path::new(if path.starts_with("/") {
         &path[1..]

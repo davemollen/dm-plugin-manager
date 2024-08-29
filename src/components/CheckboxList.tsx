@@ -1,5 +1,5 @@
 import { ChangeEvent, ReactNode, RefObject, useEffect, useRef } from "react";
-import { Checkbox } from "./Checkbox";
+import { Checkbox, CheckboxSkeleton } from "./Checkbox";
 
 export function CheckboxList<T extends string>({
   title,
@@ -66,6 +66,27 @@ export function CheckboxList<T extends string>({
           checked={selectedItems.includes(item)}
           className="ml-4"
         />
+      ))}
+    </div>
+  );
+}
+
+export function CheckboxListSkeleton({
+  count,
+  enableCheckAll = true,
+  className,
+}: {
+  count: number;
+  enableCheckAll?: boolean;
+  className?: string;
+}) {
+  return (
+    <div
+      className={`flex animate-pulse flex-col gap-2 ${className ?? ""}`.trim()}
+    >
+      {enableCheckAll && <CheckboxSkeleton />}
+      {[...Array(count).keys()].map((i) => (
+        <CheckboxSkeleton key={i} className="ml-4" />
       ))}
     </div>
   );

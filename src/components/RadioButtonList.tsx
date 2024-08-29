@@ -1,5 +1,5 @@
 import { ChangeEvent } from "react";
-import { RadioButton } from "./RadioButton";
+import { RadioButton, RadioButtonSkeleton } from "./RadioButton";
 
 export function RadioButtonList<T extends string>({
   groupName,
@@ -29,6 +29,24 @@ export function RadioButtonList<T extends string>({
           checked={item === selectedItem}
           onChange={onRadioButtonChange}
         />
+      ))}
+    </div>
+  );
+}
+
+export function RadioButtonListSkeleton({
+  count,
+  className,
+}: {
+  count: number;
+  className?: string;
+}) {
+  return (
+    <div
+      className={`flex animate-pulse flex-col gap-2 ${className ?? ""}`.trim()}
+    >
+      {[...Array(count).keys()].map((i) => (
+        <RadioButtonSkeleton key={i} />
       ))}
     </div>
   );

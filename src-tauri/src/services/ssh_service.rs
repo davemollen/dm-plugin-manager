@@ -15,8 +15,8 @@ pub enum SshError {
     #[error("Ssh command error: {0}")]
     CommandError(String),
 
-    #[error("Ssh connection timed out")]
-    ConnectionTimeoutError,
+    #[error("Unable to connect with MOD")]
+    NoConnection,
 
     #[error("Ssh write to buffer failed: {0}")]
     WriteError(#[from] std::io::Error),
@@ -56,7 +56,7 @@ impl SshService {
 
         match timeout(Self::CONNECTION_TIMEOUT, future).await {
             Ok(result) => result,
-            Err(_) => Err(SshError::ConnectionTimeoutError),
+            Err(_) => Err(SshError::NoConnection),
         }
     }
 

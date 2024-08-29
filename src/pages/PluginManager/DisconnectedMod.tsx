@@ -1,11 +1,9 @@
-import { Button } from "../../components/Button";
+import { Button } from "@/components/Button";
 
 export function DisconnectedMod({ reconnect }: { reconnect: () => void }) {
   return (
-    <div>
-      <h3 className="text-3xl font-bold tracking-wide">
-        Unable to connect with MOD.
-      </h3>
+    <div className="mt-4 rounded-xl bg-panel p-4">
+      <h4 className="font-sans font-semibold">Unable to connect with MOD</h4>
       <p className="mt-2">
         Make sure your MOD is hooked up via USB and try to reconnect.
         <br />

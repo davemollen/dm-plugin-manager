@@ -1,10 +1,14 @@
 import { Button } from "@/components/Button";
 import { Checkbox } from "@/components/Checkbox";
-import { CheckboxList } from "@/components/CheckboxList";
-import { RadioButtonList } from "@/components/RadioButtonList";
+import { CheckboxList, CheckboxListSkeleton } from "@/components/CheckboxList";
+import {
+  RadioButtonList,
+  RadioButtonListSkeleton,
+} from "@/components/RadioButtonList";
+import { useToast } from "@/hooks/useToast";
 import { invoke } from "@tauri-apps/api/core";
-import { error } from "@tauri-apps/plugin-log";
 import { useEffect, useState } from "react";
+import { DisconnectedMod } from "./PluginManager/DisconnectedMod";
 
 type Mode = "Install" | "Uninstall";
 type PluginFormat = "VST3" | "CLAP" | "MOD Audio";
@@ -13,6 +17,8 @@ type Plugins = {
   [K in PluginFormat]: K extends "MOD Audio"
     ? Record<ModPlatform, string[]>
     : string[];
+} & {
+  modIsConnected: boolean;
 };
 
 const modes: Mode[] = ["Install", "Uninstall"];
@@ -24,6 +30,7 @@ const initialPlugins: Plugins = {
     "Duo X": [],
     Dwarf: [],
   },
+  modIsConnected: false,
 };
 
 export function PluginManager() {
@@ -34,6 +41,7 @@ export function PluginManager() {
   const [isFetching, setIsFetching] = useState<boolean>(false);
   const [selectedModPlatform, setSelectedModPlatform] =
     useState<ModPlatform>("Dwarf");
+  const toast = useToast();
 
   const hasVst3Plugins = plugins["VST3"].length > 0;
   const hasClapPlugins = plugins["CLAP"].length > 0;
@@ -60,7 +68,8 @@ export function PluginManager() {
         "MOD Audio": selectModAudioPlugins(plugins, selectedModPlatform),
       });
     } catch (e) {
-      error(e as string);
+      setPlugins(initialPlugins);
+      toast?.error(e as string);
     } finally {
       setIsFetching(false);
     }
@@ -71,8 +80,9 @@ export function PluginManager() {
       await invoke<Plugins>("create_plugins", {
         plugins: selectedPlugins,
       });
+      toast?.success("Finished installing plugins");
     } catch (e) {
-      error(e as string);
+      toast?.error(e as string);
     }
   }
 
@@ -81,8 +91,9 @@ export function PluginManager() {
       await invoke<Plugins>("delete_plugins", {
         plugins: selectedPlugins,
       });
+      toast?.success("Finished uninstalling plugins");
     } catch (e) {
-      error(e as string);
+      toast?.error(e as string);
     }
   }
 
@@ -107,7 +118,26 @@ export function PluginManager() {
   }, [mode]);
 
   if (isFetching) {
-    return <div>Loading...</div>;
+    return (
+      <div className="w-full">
+        <h4 className="font-sans text-xl font-bold">Mode</h4>
+
+        <RadioButtonListSkeleton count={2} className="mt-2" />
+
+        <h4 className="mt-8 font-sans text-xl font-bold">Plugin formats</h4>
+        <CheckboxListSkeleton count={3} className="mt-4" />
+        <CheckboxListSkeleton count={4} className="mt-4" />
+        <div className="mt-4">
+          <CheckboxListSkeleton count={0} />
+          <RadioButtonListSkeleton count={2} className="ml-4 mt-2" />
+          <CheckboxListSkeleton
+            count={2}
+            enableCheckAll={false}
+            className="ml-8 mt-2"
+          />
+        </div>
+      </div>
+    );
   }
   return (
     <div className="w-full">
@@ -121,7 +151,7 @@ export function PluginManager() {
       />
 
       {noPluginsFound ? (
-        <div className="mt-8 rounded-xl bg-gray-200 p-4">
+        <div className="mt-8 rounded-xl bg-panel p-4">
           <h3 className="font-sans text-3xl font-bold">No plugins found</h3>
           <p className="mt-4">
             Unfortunately no plugins are available at this time. Please try
@@ -193,24 +223,17 @@ export function PluginManager() {
               className="ml-8 mt-4"
             />
           )}
-          {mode === "Install" && (
-            <Button
-              onClick={createPlugins}
-              disabled={noPluginsSelected}
-              className="mt-8"
-            >
-              Install
-            </Button>
+          {!plugins.modIsConnected && (
+            <DisconnectedMod reconnect={fetchPlugins} />
           )}
-          {mode === "Uninstall" && (
-            <Button
-              onClick={deletePlugins}
-              disabled={noPluginsSelected}
-              className="mt-8"
-            >
-              Uninstall
-            </Button>
-          )}
+
+          <Button
+            onClick={mode === "Install" ? createPlugins : deletePlugins}
+            disabled={noPluginsSelected}
+            className="sticky bottom-4 mt-8"
+          >
+            {mode}
+          </Button>
         </div>
       )}
     </div>

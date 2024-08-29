@@ -19,7 +19,7 @@ function App() {
     <ToastContextProvider>
       <Router>
         <Navigation>
-          <main className="flex flex-1 w-full min-h-screen flex-col p-6">
+          <main className="flex min-h-screen w-full flex-1 flex-col p-6">
             <Routes>
               <Route path="/" element={<PluginManager />} />
               <Route

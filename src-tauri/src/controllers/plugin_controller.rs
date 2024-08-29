@@ -12,7 +12,7 @@ use tauri::utils::platform;
 use thiserror::Error;
 use zip_service::ZipService;
 
-use crate::mod_plugin_controller::{self, delete_mod_plugin, get_mod_plugins};
+use crate::mod_plugin_controller;
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -54,11 +54,16 @@ pub async fn get_installable_plugins() -> Result<HashMap<String, serde_json::Val
     let mut data: HashMap<String, serde_json::Value> = HashMap::new();
 
     let mut mod_audio: HashMap<String, Vec<String>> = HashMap::new();
-    mod_audio.insert(
-        "Dwarf".to_string(),
-        vec!["dm-LFO".to_string(), "dm-Stutter".to_string()],
-    );
-    mod_audio.insert("Duo".to_string(), vec!["dm-LFO".to_string()]);
+    if mod_plugin_controller::establish_connection().await.is_ok() {
+        data.insert("modIsConnected".to_string(), json!(true));
+        mod_audio.insert(
+            "Dwarf".to_string(),
+            vec!["dm-LFO".to_string(), "dm-Stutter".to_string()],
+        );
+        mod_audio.insert("Duo".to_string(), vec!["dm-LFO".to_string()]);
+    } else {
+        data.insert("modIsConnected".to_string(), json!(false));
+    }
 
     // Adding the "MOD Audio" entry
     data.insert("MOD Audio".to_string(), json!(mod_audio));
@@ -84,25 +89,32 @@ pub async fn get_installed_plugins() -> Result<HashMap<String, serde_json::Value
             for (platform, value) in mod_map {
                 if let Value::Array(plugins) = value {
                     if !plugins.is_empty() {
-                        let all_plugins = get_mod_plugins().await?;
+                        if let Ok(all_plugins) = mod_plugin_controller::get_mod_plugins().await {
+                            let found_plugins = plugins
+                                .iter()
+                                .filter(|plugin| {
+                                    if let Some(plugin_name) = plugin.as_str() {
+                                        all_plugins.contains(&plugin_name.to_string())
+                                    } else {
+                                        false
+                                    }
+                                })
+                                .map(|item| item.to_owned())
+                                .collect();
 
-                        let found_plugins = plugins
-                            .iter()
-                            .filter(|plugin| {
-                                if let Some(plugin_name) = plugin.as_str() {
-                                    all_plugins.contains(&plugin_name.to_string())
-                                } else {
-                                    false
-                                }
-                            })
-                            .map(|item| item.to_owned())
-                            .collect();
-
-                        let mut installable_mod_map = Map::new();
-                        installable_mod_map
-                            .insert(platform.to_string(), Value::Array(found_plugins));
-                        installed_plugins
-                            .insert("MOD Audio".to_string(), Value::Object(installable_mod_map));
+                            let mut installable_mod_map = Map::new();
+                            installed_plugins.insert("modIsConnected".to_string(), json!(true));
+                            installable_mod_map
+                                .insert(platform.to_string(), Value::Array(found_plugins));
+                            installed_plugins.insert(
+                                "MOD Audio".to_string(),
+                                Value::Object(installable_mod_map),
+                            );
+                        } else {
+                            installed_plugins.insert("modIsConnected".to_string(), json!(false));
+                            installed_plugins
+                                .insert("MOD Audio".to_string(), Value::Object(Map::new()));
+                        }
                     }
                 }
             }
@@ -242,12 +254,13 @@ pub async fn delete_plugins(plugins: HashMap<String, serde_json::Value>) -> Resu
                             .map(|plugin| async move {
                                 let plugin_name = plugin.as_str().unwrap();
                                 println!(
-                                    "Started installing MOD {} plugin: {}",
+                                    "Started uninstalling MOD {} plugin: {}",
                                     platform, plugin_name
                                 );
-                                delete_mod_plugin(plugin_name.to_string()).await?;
+                                mod_plugin_controller::delete_mod_plugin(plugin_name.to_string())
+                                    .await?;
                                 println!(
-                                    "Finished installing MOD {} plugin: {}",
+                                    "Finished uninstalling MOD {} plugin: {}",
                                     platform, plugin_name
                                 );
 
@@ -329,7 +342,10 @@ async fn create_plugin(plugin_name: &str, plugin_format: &str) -> Result<(), Err
     let plugin_path = get_plugin_path(plugin_name, plugin_format)?;
     let zipfile_path = download_zip_file(plugin_name, None).await?;
     let unzipped_folder = zipfile_path.with_extension("");
-    println!("Zipfile path: {}", zipfile_path.to_string_lossy());
+    println!(
+        "Unzipped folder path: {}",
+        unzipped_folder.to_string_lossy()
+    );
 
     match {
         ZipService::unzip(&zipfile_path)?;
