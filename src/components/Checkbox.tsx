@@ -19,22 +19,22 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
           id={id}
           name={name}
           value={value}
-          className="disabled:border-steel-400 disabled:bg-steel-400 peer relative h-5 w-5 cursor-pointer appearance-none rounded border-gray-300 bg-gray-100 checked:border-0 checked:bg-blue-400"
+          className="disabled:border-steel-400 disabled:bg-steel-400 peer relative h-5 w-5 cursor-pointer appearance-none rounded border border-gray-300 bg-gray-200 checked:border-0 checked:bg-blue-500 disabled:cursor-default"
         />
 
         <label
           htmlFor={id}
-          className="cursor-pointer select-none font-sans font-semibold"
+          className="cursor-pointer select-none font-sans font-semibold peer-disabled:cursor-default peer-disabled:opacity-50"
         >
           {id}
         </label>
         <FontAwesomeIcon
           icon={faCheck}
-          className="pointer-events-none absolute ml-0.5 hidden h-4 w-4 cursor-pointer text-foreground peer-[&:not(:indeterminate):checked]:block"
+          className="pointer-events-none absolute ml-0.5 hidden h-4 w-4 cursor-pointer text-white peer-[&:not(:indeterminate):checked]:block"
         />
         <FontAwesomeIcon
           icon={faMinus}
-          className="pointer-events-none absolute ml-0.5 hidden h-4 w-4 cursor-pointer text-foreground peer-[&:indeterminate:checked]:block"
+          className="pointer-events-none absolute ml-0.5 hidden h-4 w-4 cursor-pointer text-white peer-[&:indeterminate:checked]:block"
         />
       </div>
     );

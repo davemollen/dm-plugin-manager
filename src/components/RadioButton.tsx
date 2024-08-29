@@ -23,17 +23,17 @@ export function RadioButton({
         id={id}
         name={name}
         value={value}
-        className="disabled:border-steel-400 disabled:bg-steel-400 h-5 w-5 cursor-pointer appearance-none rounded-full border-gray-300 bg-gray-100 checked:bg-blue-400"
+        className="border-1 peer h-5 w-5 cursor-pointer appearance-none rounded-full bg-gray-200 checked:bg-blue-500 disabled:cursor-default"
       />
       <label
         htmlFor={id}
-        className="cursor-pointer select-none font-sans font-semibold"
+        className="cursor-pointer select-none font-sans font-semibold peer-disabled:cursor-default peer-disabled:opacity-50"
       >
         {value}
       </label>
       <FontAwesomeIcon
         icon={faCircle}
-        className="pointer-events-none absolute ml-1.5 h-2 w-2 cursor-pointer text-foreground"
+        className="pointer-events-none absolute ml-1.5 hidden h-2 w-2 cursor-pointer text-gray-50 peer-checked:block"
       />
     </div>
   );

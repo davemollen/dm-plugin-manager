@@ -40,13 +40,13 @@ export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(
         {...props}
         ref={ref}
         onClick={onDialogClick}
-        className={`rounded-xl border-0 p-0 backdrop:bg-background/75 ${dialogProps.className ?? ""}`.trim()}
+        className={`backdrop:bg-background/75 rounded-xl border-0 p-0 ${dialogProps.className ?? ""}`.trim()}
       >
         <form
           method="dialog"
           className="max-w-xl rounded-xl border-2 border-foreground bg-background p-4 text-foreground"
         >
-          <h3 className="text-2xl font-bold">{heading}</h3>
+          <h4 className="text-2xl font-bold">{heading}</h4>
           <p className="mt-2">{body}</p>
           <div className="mt-4 flex gap-4">
             {actions.map(({ text, onClick, buttonType }) => (
@@ -58,5 +58,5 @@ export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(
         </form>
       </dialog>
     );
-  }
+  },
 );

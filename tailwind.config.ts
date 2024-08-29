@@ -13,6 +13,7 @@ export default {
         ctaHover: "var(--colors-cta-hover)",
         link: "var(--colors-link)",
         navItemBackground: "var(--colors-nav-item-background)",
+        codebox: "var(--colors-codebox)",
         panel: "var(--colors-panel)"
       }
     },

@@ -16,7 +16,7 @@ type Plugins = {
 };
 
 const modes: Mode[] = ["Install", "Uninstall"];
-const initialSelectedPlugins: Plugins = {
+const initialPlugins: Plugins = {
   VST3: [],
   CLAP: [],
   "MOD Audio": {
@@ -28,17 +28,22 @@ const initialSelectedPlugins: Plugins = {
 
 export function PluginManager() {
   const [mode, setMode] = useState<Mode>("Install");
-  const [plugins, setPlugins] = useState<Plugins>();
-  const [selectedPlugins, setSelectedPlugins] = useState<Plugins>(
-    initialSelectedPlugins,
-  );
+  const [plugins, setPlugins] = useState<Plugins>(initialPlugins);
+  const [selectedPlugins, setSelectedPlugins] =
+    useState<Plugins>(initialPlugins);
   const [isFetching, setIsFetching] = useState<boolean>(false);
   const [selectedModPlatform, setSelectedModPlatform] =
     useState<ModPlatform>("Dwarf");
 
+  const hasVst3Plugins = plugins["VST3"].length > 0;
+  const hasClapPlugins = plugins["CLAP"].length > 0;
+  const hasModPlugins = Object.values(plugins["MOD Audio"]).some(
+    (x) => x.length > 0,
+  );
+  const noPluginsFound = !hasVst3Plugins && !hasClapPlugins && !hasModPlugins;
   const noPluginsSelected =
-    !selectedPlugins["CLAP"].length &&
     !selectedPlugins["VST3"].length &&
+    !selectedPlugins["CLAP"].length &&
     !selectedPlugins["MOD Audio"][selectedModPlatform].length;
 
   async function fetchPlugins() {
@@ -88,7 +93,7 @@ export function PluginManager() {
 
         return result;
       },
-      initialSelectedPlugins["MOD Audio"],
+      initialPlugins["MOD Audio"],
     );
   }
 
@@ -97,9 +102,12 @@ export function PluginManager() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode]);
 
+  if (isFetching) {
+    return <div>Loading...</div>;
+  }
   return (
     <div className="w-full">
-      <h2 className="font-sans text-xl font-bold">Mode</h2>
+      <h4 className="font-sans text-xl font-bold">Mode</h4>
       <RadioButtonList
         groupName="Mode"
         items={modes}
@@ -108,87 +116,98 @@ export function PluginManager() {
         className="mt-2"
       />
 
-      {isFetching && <div>Loading...</div>}
-
-      {plugins && (
-        <div className="mt-8">
-          <h2 className="font-sans text-xl font-bold">Plugin formats</h2>
-          <CheckboxList
-            title="VST3"
-            items={plugins?.VST3}
-            selectedItems={selectedPlugins.VST3}
-            onChange={(items) => {
-              setSelectedPlugins({ ...selectedPlugins, VST3: items });
-            }}
-            className="mt-4"
-          />
-          <CheckboxList
-            title="CLAP"
-            items={plugins?.CLAP}
-            selectedItems={selectedPlugins.CLAP}
-            onChange={(items) => {
-              setSelectedPlugins({ ...selectedPlugins, CLAP: items });
-            }}
-            className="mt-4"
-          />
-
-          <CheckboxList
-            title={selectedModPlatform}
-            items={plugins?.["MOD Audio"][selectedModPlatform]}
-            selectedItems={selectedPlugins["MOD Audio"][selectedModPlatform]}
-            onChange={(items) => {
-              setSelectedPlugins({
-                ...selectedPlugins,
-                "MOD Audio": {
-                  ...selectedPlugins["MOD Audio"],
-                  [selectedModPlatform]: items,
-                },
-              });
-            }}
-            overrideCheckAllComponent={(ref, onCheckAll) => (
-              <div className="-ml-8">
-                <Checkbox
-                  ref={ref}
-                  id={"MOD Audio"}
-                  name={"MOD Audio"}
-                  onChange={onCheckAll}
-                />
-                <RadioButtonList
-                  groupName="MOD Audio"
-                  items={Object.keys(plugins["MOD Audio"]) as ModPlatform[]}
-                  selectedItem={selectedModPlatform}
-                  onChange={(item) => {
-                    setSelectedModPlatform(item);
-                    setSelectedPlugins({
-                      ...selectedPlugins,
-                      ["MOD Audio"]: selectModAudioPlugins(plugins, item),
-                    });
-                  }}
-                  className="ml-4 mt-2"
-                />
-              </div>
-            )}
-            className="ml-8 mt-4"
-          />
+      {noPluginsFound ? (
+        <div className="mt-8 rounded-xl bg-gray-200 p-4">
+          <h3 className="font-sans text-3xl font-bold">No plugins found</h3>
+          <p className="mt-4">
+            Unfortunately no plugins are available at this time. Please try
+            again later.
+          </p>
         </div>
-      )}
-      {mode === "Install" && (
-        <Button
-          onClick={createPlugins}
-          disabled={noPluginsSelected}
-          className="mt-8"
-        >
-          Install
-        </Button>
-      )}
-      {mode === "Uninstall" && (
-        <Button
-          onClick={deletePlugins}
-          disabled={noPluginsSelected}
-          className="mt-8"
-        >
-          Uninstall
-        </Button>
+      ) : (
+        <div className="mt-8">
+          <h4 className="font-sans text-xl font-bold">Plugin formats</h4>
+          {hasVst3Plugins && (
+            <CheckboxList
+              title="VST3"
+              items={plugins?.VST3}
+              selectedItems={selectedPlugins.VST3}
+              onChange={(items) => {
+                setSelectedPlugins({ ...selectedPlugins, VST3: items });
+              }}
+              className="mt-4"
+            />
+          )}
+          {hasClapPlugins && (
+            <CheckboxList
+              title="CLAP"
+              items={plugins?.CLAP}
+              selectedItems={selectedPlugins.CLAP}
+              onChange={(items) => {
+                setSelectedPlugins({ ...selectedPlugins, CLAP: items });
+              }}
+              className="mt-4"
+            />
+          )}
+          {hasModPlugins && (
+            <CheckboxList
+              title={selectedModPlatform}
+              items={plugins?.["MOD Audio"][selectedModPlatform]}
+              selectedItems={selectedPlugins["MOD Audio"][selectedModPlatform]}
+              onChange={(items) => {
+                setSelectedPlugins({
+                  ...selectedPlugins,
+                  "MOD Audio": {
+                    ...selectedPlugins["MOD Audio"],
+                    [selectedModPlatform]: items,
+                  },
+                });
+              }}
+              overrideCheckAllComponent={(ref, onCheckAll) => (
+                <div className="-ml-8">
+                  <Checkbox
+                    ref={ref}
+                    id={"MOD Audio"}
+                    name={"MOD Audio"}
+                    onChange={onCheckAll}
+                  />
+                  <RadioButtonList
+                    groupName="MOD Audio"
+                    items={Object.keys(plugins["MOD Audio"]) as ModPlatform[]}
+                    selectedItem={selectedModPlatform}
+                    onChange={(item) => {
+                      setSelectedModPlatform(item);
+                      setSelectedPlugins({
+                        ...selectedPlugins,
+                        ["MOD Audio"]: selectModAudioPlugins(plugins, item),
+                      });
+                    }}
+                    className="ml-4 mt-2"
+                  />
+                </div>
+              )}
+              className="ml-8 mt-4"
+            />
+          )}
+          {mode === "Install" && (
+            <Button
+              onClick={createPlugins}
+              disabled={noPluginsSelected}
+              className="mt-8"
+            >
+              Install
+            </Button>
+          )}
+          {mode === "Uninstall" && (
+            <Button
+              onClick={deletePlugins}
+              disabled={noPluginsSelected}
+              className="mt-8"
+            >
+              Uninstall
+            </Button>
+          )}
+        </div>
       )}
     </div>
   );

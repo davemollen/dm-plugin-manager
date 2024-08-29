@@ -21,7 +21,8 @@
   --colors-cta-hover: #0e7490;
   --colors-link: #2563eb;
   --colors-nav-item-background: #e5e7eb;
-  --colors-panel: #111827;
+  --colors-codebox: #111827;
+  --colors-panel: #e5e7eb;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -32,7 +33,8 @@
     --colors-cta-hover: #06b6d4;
     --colors-link: #60a5fa;
     --colors-nav-item-background: #000;
-    --colors-panel: #e5e7eb;
+    --colors-codebox: #e5e7eb;
+    --colors-panel: #374151;
   }
 }
 

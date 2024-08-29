@@ -53,8 +53,8 @@ export function DropZone({
       if (!allowedFileTypes.some((fileType) => folderName.endsWith(fileType))) {
         throw new Error(
           `Only the following file types are allowed: "${allowedFileTypes.join(
-            ","
-          )}".`
+            ",",
+          )}".`,
         );
       }
     }
@@ -88,7 +88,7 @@ export function DropZone({
   async function getAllFileEntries(dataTransferItemList: DataTransferItemList) {
     const files: DropZoneFile[] = [];
     const fileSystemEntries = Array.from(dataTransferItemList).map((item) =>
-      item.webkitGetAsEntry()
+      item.webkitGetAsEntry(),
     );
 
     if (fileSystemEntries.some((entry) => !entry?.isDirectory)) {
@@ -97,13 +97,13 @@ export function DropZone({
     if (
       allowedFileTypes &&
       !fileSystemEntries.every((entry) =>
-        allowedFileTypes.some((fileType) => entry?.name.endsWith(fileType))
+        allowedFileTypes.some((fileType) => entry?.name.endsWith(fileType)),
       )
     ) {
       throw new Error(
         `Only the following file types are allowed: "${allowedFileTypes.join(
-          ","
-        )}".`
+          ",",
+        )}".`,
       );
     }
     await readFileSystemEntries(fileSystemEntries, files);
@@ -113,13 +113,13 @@ export function DropZone({
 
   async function readFileSystemEntries(
     fileSystemEntries: (FileSystemEntry | null)[],
-    files: DropZoneFile[]
+    files: DropZoneFile[],
   ) {
     await Promise.all(
       fileSystemEntries.map(async (entry) => {
         if (entry?.isDirectory) {
           const fileSystemEntries = await readDirectory(
-            entry as FileSystemDirectoryEntry
+            entry as FileSystemDirectoryEntry,
           );
           await readFileSystemEntries(fileSystemEntries, files);
         }
@@ -127,7 +127,7 @@ export function DropZone({
           const file = await readFile(entry as FileSystemFileEntry);
           files.push(file);
         }
-      })
+      }),
     );
   }
 
@@ -165,13 +165,13 @@ export function DropZone({
         role="button"
         aria-label="dropzone"
         tabIndex={0}
-        className={`relative min-h-32 flex flex-col items-center justify-center border-2 border-dashed p-4 text-center ${
+        className={`relative flex min-h-32 flex-col items-center justify-center border-2 border-dashed p-4 text-center ${
           !!error
             ? "border-red-600 text-red-600"
             : isDragging && !disabled
               ? "border-blue-400 text-link"
               : "border-foreground text-foreground"
-        } ${disabled ? "opacity-50 cursor-not-allowed" : "opacity-100 cursor-pointer hover:border-blue-400 hover:text-link"} ${className ?? ""}`.trim()}
+        } ${disabled ? "cursor-default opacity-50" : "cursor-pointer opacity-100 hover:border-blue-400 hover:text-link"} ${className ?? ""}`.trim()}
         onSubmit={(e) => e.preventDefault()}
         onDrop={onDrop}
         onDragLeave={onDragLeave}
