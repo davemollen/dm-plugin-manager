@@ -1,7 +1,9 @@
 use std::fs::{self, File};
-use std::io;
+use std::io::{self, Read};
 use std::path::PathBuf;
 use tar::Archive;
+
+use crate::mod_plugin_controller;
 
 pub struct ZipService;
 
@@ -32,5 +34,28 @@ impl ZipService {
         }
 
         Ok(())
+    }
+
+    pub fn unzip_to_u8(
+        file_path: &PathBuf,
+    ) -> Result<Vec<mod_plugin_controller::ArrayBufWithPath>, io::Error> {
+        let mut result: Vec<mod_plugin_controller::ArrayBufWithPath> = Vec::new();
+        let file = File::open(file_path)?;
+        let mut archive = Archive::new(file);
+
+        for entry in archive.entries()? {
+            let mut entry = entry?;
+            let path = entry.path()?;
+            let path = path.to_str().unwrap().to_string();
+
+            if entry.header().entry_type().is_file() {
+                let mut buffer = Vec::new();
+                entry.read_to_end(&mut buffer)?;
+
+                result.push(mod_plugin_controller::ArrayBufWithPath { path, buffer })
+            }
+        }
+
+        Ok(result)
     }
 }

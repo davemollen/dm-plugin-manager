@@ -49,7 +49,11 @@ export function PluginManager() {
   async function fetchPlugins() {
     try {
       setIsFetching(true);
-      const plugins = await invoke<Plugins>("get_plugins", { mode });
+
+      const plugins =
+        mode === "Install"
+          ? await invoke<Plugins>("get_installable_plugins")
+          : await invoke<Plugins>("get_installed_plugins");
       setPlugins(plugins);
       setSelectedPlugins({
         ...plugins,

@@ -6,21 +6,21 @@ use std::path::{Path, PathBuf};
 use thiserror::Error;
 
 #[derive(Deserialize, Debug, Clone)]
-pub struct File {
-    path: String,
-    buffer: Vec<u8>,
+pub struct ArrayBufWithPath {
+    pub path: String,
+    pub buffer: Vec<u8>,
 }
 
 #[derive(Error, Debug)]
-pub enum ModPluginControllerError {
+pub enum Error {
     #[error("{0}")]
     SshError(#[from] SshError),
 
     #[error("No plugins could be found.")]
-    NotFound,
+    NoPlugins,
 }
 
-impl serde::Serialize for ModPluginControllerError {
+impl serde::Serialize for Error {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::ser::Serializer,
@@ -30,11 +30,11 @@ impl serde::Serialize for ModPluginControllerError {
 }
 
 #[tauri::command]
-pub async fn get_mod_plugins() -> Result<Vec<String>, ModPluginControllerError> {
+pub async fn get_mod_plugins() -> Result<Vec<String>, Error> {
     let ssh_service = SshService::connect("192.168.51.1", "root", "mod").await?;
     let stdout = ssh_service.execute_command("ls .lv2", None).await?;
     if stdout.is_empty() {
-        Err(ModPluginControllerError::NotFound)
+        Err(Error::NoPlugins)
     } else {
         let plugins = stdout
             .split("\n")
@@ -47,7 +47,7 @@ pub async fn get_mod_plugins() -> Result<Vec<String>, ModPluginControllerError> 
 }
 
 #[tauri::command]
-pub async fn create_mod_plugins(files: Vec<File>) -> Result<Vec<String>, ModPluginControllerError> {
+pub async fn create_mod_plugins(files: Vec<ArrayBufWithPath>) -> Result<Vec<String>, Error> {
     let mut plugin_names: Vec<String> = Vec::new();
     let ssh_service = SshService::connect("192.168.51.1", "root", "mod").await?;
 
@@ -58,14 +58,25 @@ pub async fn create_mod_plugins(files: Vec<File>) -> Result<Vec<String>, ModPlug
         let mkdir_command = format!("mkdir -p {}", destination_folder_path);
         ssh_service.execute_command(&mkdir_command, None).await?;
 
-        let cat_command = format!("cat > {}", destination_path.to_str().unwrap());
-        ssh_service
-            .execute_command(&cat_command, Some(&file.buffer))
-            .await?;
-
-        let created_plugin_name = extract_root_folder_name(path);
-        if !plugin_names.contains(&created_plugin_name) {
-            plugin_names.push(created_plugin_name)
+        match {
+            let cat_command = format!("cat > {}", destination_path.to_str().unwrap());
+            ssh_service
+                .execute_command(&cat_command, Some(&file.buffer))
+                .await?;
+            Ok(())
+        } {
+            Ok(_) => {
+                let created_plugin_name = extract_root_folder_name(path);
+                if !plugin_names.contains(&created_plugin_name) {
+                    plugin_names.push(created_plugin_name)
+                }
+                return Ok(plugin_names);
+            }
+            Err(e) => {
+                let rm_command = format!("rm -rf {}", destination_folder_path);
+                ssh_service.execute_command(&rm_command, None).await?;
+                return Err(e);
+            }
         }
     }
 
@@ -75,7 +86,7 @@ pub async fn create_mod_plugins(files: Vec<File>) -> Result<Vec<String>, ModPlug
 }
 
 #[tauri::command]
-pub async fn delete_mod_plugin(name: String) -> Result<(), ModPluginControllerError> {
+pub async fn delete_mod_plugin(name: String) -> Result<(), Error> {
     let ssh_service = SshService::connect("192.168.51.1", "root", "mod").await?;
     ssh_service
         .execute_command(&format!("rm -rf .lv2/{}", name), None)
