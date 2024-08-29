@@ -6,12 +6,14 @@ export function RadioButtonList<T extends string>({
   items,
   selectedItem,
   onChange,
+  disabled,
   className,
 }: {
   groupName: string;
   items: T[];
   selectedItem: T;
   onChange: (item: T) => void;
+  disabled?: boolean;
   className?: string;
 }) {
   function onRadioButtonChange(event: ChangeEvent<HTMLInputElement>) {
@@ -27,6 +29,7 @@ export function RadioButtonList<T extends string>({
           name={groupName}
           value={item}
           checked={item === selectedItem}
+          disabled={disabled}
           onChange={onRadioButtonChange}
         />
       ))}

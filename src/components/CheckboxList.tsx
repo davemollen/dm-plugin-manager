@@ -7,6 +7,7 @@ export function CheckboxList<T extends string>({
   selectedItems,
   onChange,
   overrideCheckAllComponent,
+  disabled,
   className,
 }: {
   title: string;
@@ -14,9 +15,12 @@ export function CheckboxList<T extends string>({
   selectedItems: T[];
   onChange: (selectedItems: T[]) => void;
   overrideCheckAllComponent?: (
+    // TODO: pass all possible props
     ref: RefObject<HTMLInputElement>,
     onCheckAll: (event: ChangeEvent<HTMLInputElement>) => void,
+    disabled?: boolean,
   ) => ReactNode;
+  disabled?: boolean;
   className?: string;
 }) {
   const ref = useRef<HTMLInputElement>(null);
@@ -53,9 +57,15 @@ export function CheckboxList<T extends string>({
   return (
     <div className={`flex flex-col gap-2 ${className ?? ""}`.trim()}>
       {overrideCheckAllComponent ? (
-        overrideCheckAllComponent(ref, onCheckAll)
+        overrideCheckAllComponent(ref, onCheckAll, disabled)
       ) : (
-        <Checkbox ref={ref} id={title} name={title} onChange={onCheckAll} />
+        <Checkbox
+          ref={ref}
+          id={title}
+          name={title}
+          disabled={disabled}
+          onChange={onCheckAll}
+        />
       )}
       {items.map((item) => (
         <Checkbox
@@ -64,6 +74,7 @@ export function CheckboxList<T extends string>({
           name={title}
           onChange={onCheckboxChange}
           checked={selectedItems.includes(item)}
+          disabled={disabled}
           className="ml-4"
         />
       ))}

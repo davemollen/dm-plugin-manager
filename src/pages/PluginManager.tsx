@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/useToast";
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useState } from "react";
 import { DisconnectedMod } from "./PluginManager/DisconnectedMod";
-import { error, info } from "@tauri-apps/plugin-log";
+import { error } from "@tauri-apps/plugin-log";
 
 type Mode = "Install" | "Uninstall";
 type PluginFormat = "VST3" | "CLAP" | "MOD Audio";
@@ -199,14 +199,15 @@ export function PluginManager() {
                   },
                 });
               }}
-              overrideCheckAllComponent={(ref, onCheckAll) => (
+              disabled={plugins.modIsConnected === false}
+              overrideCheckAllComponent={(ref, onCheckAll, disabled) => (
                 <div className="-ml-8">
                   <Checkbox
                     ref={ref}
                     id={"MOD Audio"}
                     name={"MOD Audio"}
                     onChange={onCheckAll}
-                    disabled={plugins.modIsConnected === false}
+                    disabled={disabled}
                   />
                   <RadioButtonList
                     groupName="MOD Audio"
@@ -219,6 +220,7 @@ export function PluginManager() {
                         ["MOD Audio"]: selectModAudioPlugins(plugins, item),
                       });
                     }}
+                    disabled={disabled}
                     className="ml-4 mt-2"
                   />
                 </div>
