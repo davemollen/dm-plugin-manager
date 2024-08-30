@@ -1,4 +1,4 @@
-import { Button, ButtonSkeleton } from "@/components/Button";
+import { Button } from "@/components/Button";
 import { Checkbox } from "@/components/Checkbox";
 import { CheckboxList, CheckboxListSkeleton } from "@/components/CheckboxList";
 import {
@@ -40,6 +40,7 @@ export function PluginManager() {
   const [selectedPlugins, setSelectedPlugins] =
     useState<Plugins>(initialPlugins);
   const [isFetching, setIsFetching] = useState<boolean>(false);
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [selectedModPlatform, setSelectedModPlatform] =
     useState<ModPlatform>("Dwarf");
   const toast = useToast();
@@ -81,12 +82,15 @@ export function PluginManager() {
 
   async function createPlugins() {
     try {
+      setIsProcessing(true);
       await invoke<Plugins>("create_plugins", {
         plugins: selectedPlugins,
       });
       toast?.success("Finished installing plugins");
     } catch (e) {
       toast?.error(e as string);
+    } finally {
+      setIsProcessing(false);
     }
   }
 
@@ -129,7 +133,7 @@ export function PluginManager() {
         <RadioButtonListSkeleton count={2} className="mt-2" />
 
         <h4 className="mt-8 font-sans text-xl font-bold">Plugin formats</h4>
-        <div className="mt-4 flex flex-col gap-4 lg:flex-row lg:gap-8">
+        <div className="mt-4 flex flex-col gap-4 lg:flex-row">
           <CheckboxListSkeleton count={3} />
           <CheckboxListSkeleton count={4} />
           <div>
@@ -142,7 +146,6 @@ export function PluginManager() {
             />
           </div>
         </div>
-        <ButtonSkeleton className="sticky bottom-4 mt-8" />
       </div>
     );
   }
@@ -153,6 +156,7 @@ export function PluginManager() {
         groupName="Mode"
         items={modes}
         selectedItem={mode}
+        disabled={isProcessing}
         onChange={(item) => setMode(item)}
         className="mt-2"
       />
@@ -168,12 +172,13 @@ export function PluginManager() {
       ) : (
         <div className="mt-8">
           <h4 className="font-sans text-xl font-bold">Plugin formats</h4>
-          <div className="mt-4 flex flex-col gap-4 lg:flex-row lg:gap-8">
+          <div className="mt-4 flex flex-col gap-4 lg:flex-row lg:items-start">
             {hasVst3Plugins && (
               <CheckboxList
                 title="VST3"
                 items={plugins?.VST3}
                 selectedItems={selectedPlugins.VST3}
+                disabled={isProcessing}
                 onChange={(items) => {
                   setSelectedPlugins({ ...selectedPlugins, VST3: items });
                 }}
@@ -184,6 +189,7 @@ export function PluginManager() {
                 title="CLAP"
                 items={plugins?.CLAP}
                 selectedItems={selectedPlugins.CLAP}
+                disabled={isProcessing}
                 onChange={(items) => {
                   setSelectedPlugins({ ...selectedPlugins, CLAP: items });
                 }}
@@ -196,6 +202,7 @@ export function PluginManager() {
                 selectedItems={
                   selectedPlugins["MOD Audio"][selectedModPlatform]
                 }
+                disabled={isProcessing}
                 onChange={(items) => {
                   setSelectedPlugins({
                     ...selectedPlugins,
@@ -212,6 +219,7 @@ export function PluginManager() {
                       groupName="MOD Audio"
                       items={Object.keys(plugins["MOD Audio"]) as ModPlatform[]}
                       selectedItem={selectedModPlatform}
+                      disabled={isProcessing}
                       onChange={(item) => {
                         setSelectedModPlatform(item);
                         setSelectedPlugins({
@@ -227,21 +235,27 @@ export function PluginManager() {
               />
             )}
             {plugins.modIsConnected === false && (
-              <div>
+              <div className="flex max-w-md flex-col overflow-hidden rounded-xl border border-panel/50">
                 <Checkbox
                   id="MOD Audio"
                   name="MOD Audio"
                   onChange={() => {}}
                   disabled={true}
+                  className="bg-panel/50 p-2"
                 />
-                <DisconnectedMod reconnect={fetchPlugins} className="mt-2" />
+                <DisconnectedMod
+                  reconnect={fetchPlugins}
+                  disabled={isProcessing}
+                  className="py-4 pl-6 pr-2"
+                />
               </div>
             )}
           </div>
 
           <Button
             onClick={mode === "Install" ? createPlugins : deletePlugins}
-            disabled={noPluginsSelected}
+            disabled={noPluginsSelected || isProcessing}
+            isLoading={isProcessing}
             className="sticky bottom-4 mt-8"
           >
             {mode} plugins

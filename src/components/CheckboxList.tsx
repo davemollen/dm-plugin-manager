@@ -53,7 +53,9 @@ export function CheckboxList<T extends string>({
   }, [selectedItems, ref]);
 
   return (
-    <div className={`flex flex-col gap-2 ${className ?? ""}`.trim()}>
+    <div
+      className={`flex max-w-xs flex-col overflow-hidden rounded-xl border border-panel ${className ?? ""}`.trim()}
+    >
       {overrideCheckAllComponent ? (
         overrideCheckAllComponent({ ref, onCheckAll })
       ) : (
@@ -63,6 +65,7 @@ export function CheckboxList<T extends string>({
           name={title}
           disabled={disabled}
           onChange={onCheckAll}
+          className="bg-panel p-2"
         />
       )}
       {items.map((item) => (
@@ -73,7 +76,7 @@ export function CheckboxList<T extends string>({
           onChange={onCheckboxChange}
           checked={selectedItems.includes(item)}
           disabled={disabled}
-          className="ml-4"
+          className="border-b border-panel p-2 pl-6 last:border-none"
         />
       ))}
     </div>
