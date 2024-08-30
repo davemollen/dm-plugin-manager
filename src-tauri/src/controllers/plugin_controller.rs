@@ -36,6 +36,9 @@ pub enum Error {
 
     #[error("Unknown plugin format")]
     NoPluginFormat,
+
+    #[error("Home directory could not be found")]
+    NoHomeDirectory,
 }
 
 impl serde::Serialize for Error {
@@ -443,18 +446,18 @@ fn get_plugin_file_name(plugin_name: &str, plugin_format: &str) -> Result<String
 }
 
 fn get_plugin_folder(plugin_format: &str) -> Result<PathBuf, Error> {
-    let root_folder = std::env::var("HOME")?;
-    let plugin_folder = match (plugin_format, get_os_type().as_str()) {
-        ("VST3", "macOS") => Ok(format!("{}/Library/Audio/Plug-Ins/VST3", root_folder)),
-        ("CLAP", "macOS") => Ok(format!("{}/Library/Audio/Plug-Ins/CLAP", root_folder)),
-        ("VST3", "windows") => Ok("C:/Program Files/Common Files/VST3/".to_string()),
-        ("CLAP", "windows") => Ok("C:/Program Files/Common Files/CLAP/".to_string()),
-        ("VST3", "linux") => Ok(format!("{}/.vst3", root_folder)),
-        ("CLAP", "linux") => Ok(format!("{}/.clap", root_folder)),
+    let home_dir = dirs::home_dir();
+    let plugin_folder = match (plugin_format, get_os_type().as_str(), home_dir) {
+        ("VST3", "macOS", _) => Ok(PathBuf::from("/Library/Audio/Plug-Ins/VST3")),
+        ("CLAP", "macOS", _) => Ok(PathBuf::from("/Library/Audio/Plug-Ins/CLAP")),
+        ("VST3", "windows", _) => Ok(PathBuf::from("C:/Program Files/Common Files/VST3")),
+        ("CLAP", "windows", _) => Ok(PathBuf::from("C:/Program Files/Common Files/CLAP")),
+        ("VST3", "linux", Some(home)) => Ok(home.join(Path::new(".vst3"))),
+        ("CLAP", "linux", Some(home)) => Ok(home.join(Path::new(".clap"))),
         _ => Err(Error::NoPluginFolder),
     }?;
 
-    Ok(PathBuf::from(plugin_folder))
+    Ok(plugin_folder)
 }
 
 fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> Result<(), Error> {

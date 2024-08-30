@@ -2385,6 +2385,7 @@ name = "mod-plugin-manager"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "dirs",
  "futures",
  "reqwest",
  "russh",
