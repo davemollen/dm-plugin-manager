@@ -26,7 +26,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
           htmlFor={id}
           className="cursor-pointer select-none font-sans font-semibold peer-disabled:cursor-default peer-disabled:opacity-50"
         >
-          {id}
+          {value}
         </label>
         <FontAwesomeIcon
           icon={faCheck}

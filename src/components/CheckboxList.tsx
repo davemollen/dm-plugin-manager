@@ -32,12 +32,12 @@ export function CheckboxList<T extends string>({
   }
 
   function onCheckboxChange(event: ChangeEvent<HTMLInputElement>) {
-    const { id, checked } = event.target;
+    const { value, checked } = event.target;
 
     if (checked) {
-      onChange([...selectedItems, id as T]);
+      onChange([...selectedItems, value as T]);
     } else {
-      onChange(selectedItems.filter((item) => item != id));
+      onChange(selectedItems.filter((item) => item != value));
     }
   }
 
@@ -63,6 +63,7 @@ export function CheckboxList<T extends string>({
           ref={ref}
           id={title}
           name={title}
+          value={title}
           disabled={disabled}
           onChange={onCheckAll}
           className="bg-panel p-2"
@@ -71,8 +72,9 @@ export function CheckboxList<T extends string>({
       {items.map((item) => (
         <Checkbox
           key={item}
-          id={item}
+          id={item + title}
           name={title}
+          value={item}
           onChange={onCheckboxChange}
           checked={selectedItems.includes(item)}
           disabled={disabled}

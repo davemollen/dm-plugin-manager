@@ -214,7 +214,12 @@ export function PluginManager() {
                 }}
                 overrideCheckAllComponent={(props) => (
                   <div className="-ml-8">
-                    <Checkbox {...props} id="MOD Audio" name="MOD Audio" />
+                    <Checkbox
+                      {...props}
+                      id="MOD Audio"
+                      name="MOD Audio"
+                      value="MOD Audio"
+                    />
                     <RadioButtonList
                       groupName="MOD Audio"
                       items={Object.keys(plugins["MOD Audio"]) as ModPlatform[]}
@@ -239,6 +244,7 @@ export function PluginManager() {
                 <Checkbox
                   id="MOD Audio"
                   name="MOD Audio"
+                  value="MOD Audio"
                   onChange={() => {}}
                   disabled={true}
                   className="bg-panel/50 p-2"
