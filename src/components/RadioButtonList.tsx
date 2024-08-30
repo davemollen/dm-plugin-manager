@@ -45,9 +45,7 @@ export function RadioButtonListSkeleton({
   className?: string;
 }) {
   return (
-    <div
-      className={`flex animate-pulse flex-col gap-2 ${className ?? ""}`.trim()}
-    >
+    <div className={`flex flex-col gap-2 ${className ?? ""}`.trim()}>
       {[...Array(count).keys()].map((i) => (
         <RadioButtonSkeleton key={i} />
       ))}

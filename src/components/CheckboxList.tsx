@@ -96,11 +96,14 @@ export function CheckboxListSkeleton({
 }) {
   return (
     <div
-      className={`flex animate-pulse flex-col gap-2 ${className ?? ""}`.trim()}
+      className={`flex max-w-xs flex-col overflow-hidden rounded-xl border border-panel ${className ?? ""}`.trim()}
     >
-      {enableCheckAll && <CheckboxSkeleton />}
+      {enableCheckAll && <CheckboxSkeleton className="bg-panel p-2" />}
       {[...Array(count).keys()].map((i) => (
-        <CheckboxSkeleton key={i} className="ml-4" />
+        <CheckboxSkeleton
+          key={i}
+          className="border-b border-panel p-2 pl-6 last:border-none"
+        />
       ))}
     </div>
   );
