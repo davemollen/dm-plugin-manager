@@ -199,14 +199,9 @@ export function PluginManager() {
                   },
                 });
               }}
-              overrideCheckAllComponent={(ref, onCheckAll) => (
+              overrideCheckAllComponent={(props) => (
                 <div className="-ml-8">
-                  <Checkbox
-                    ref={ref}
-                    id="MOD Audio"
-                    name="MOD Audio"
-                    onChange={onCheckAll}
-                  />
+                  <Checkbox {...props} id="MOD Audio" name="MOD Audio" />
                   <RadioButtonList
                     groupName="MOD Audio"
                     items={Object.keys(plugins["MOD Audio"]) as ModPlatform[]}
