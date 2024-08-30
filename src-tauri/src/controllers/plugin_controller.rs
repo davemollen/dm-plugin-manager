@@ -1,6 +1,6 @@
 #[path = "../services/zip_service.rs"]
 mod zip_service;
-use futures::future::join_all;
+use futures::future::try_join_all;
 use serde_json::{json, Map, Value};
 use std::{
     collections::HashMap,
@@ -36,9 +36,6 @@ pub enum Error {
 
     #[error("Unknown plugin format")]
     NoPluginFormat,
-
-    #[error("Home directory could not be found")]
-    NoHomeDirectory,
 }
 
 impl serde::Serialize for Error {
@@ -191,7 +188,7 @@ pub async fn create_plugins(plugins: HashMap<String, serde_json::Value>) -> Resu
                     })
                     .collect();
 
-                join_all(futures).await;
+                try_join_all(futures).await?;
             }
         }
     }
@@ -211,7 +208,7 @@ pub async fn create_plugins(plugins: HashMap<String, serde_json::Value>) -> Resu
                     })
                     .collect();
 
-                join_all(futures).await;
+                try_join_all(futures).await?;
             }
         }
     }
@@ -241,7 +238,7 @@ pub async fn create_plugins(plugins: HashMap<String, serde_json::Value>) -> Resu
                             })
                             .collect();
 
-                        join_all(futures).await;
+                        try_join_all(futures).await?;
                     }
                 }
             }
@@ -278,7 +275,7 @@ pub async fn delete_plugins(plugins: HashMap<String, serde_json::Value>) -> Resu
                             })
                             .collect();
 
-                        join_all(futures).await;
+                        try_join_all(futures).await?;
                     }
                 }
             }
@@ -300,7 +297,7 @@ pub async fn delete_plugins(plugins: HashMap<String, serde_json::Value>) -> Resu
                     })
                     .collect();
 
-                join_all(futures).await;
+                try_join_all(futures).await?;
             }
         }
     }
@@ -320,7 +317,7 @@ pub async fn delete_plugins(plugins: HashMap<String, serde_json::Value>) -> Resu
                     })
                     .collect();
 
-                join_all(futures).await;
+                try_join_all(futures).await?;
             }
         }
     }
@@ -357,11 +354,11 @@ async fn create_plugin(plugin_name: &str, plugin_format: &str) -> Result<(), Err
         unzipped_folder.to_string_lossy()
     );
 
-    match {
-        ZipService::unzip(&zipfile_path)?;
-        copy_dir_all(unzipped_folder.join(&plugin_file_name), &plugin_path)?;
-        Ok(())
-    } {
+    let unzip_result = ZipService::unzip(&zipfile_path).map_err(Error::from);
+    let copy_result = unzip_result.and_then(|_| {
+        copy_dir_all(unzipped_folder.join(&plugin_file_name), &plugin_path).map_err(Error::from)
+    });
+    match copy_result {
         Ok(_) => {
             fs::remove_file(&zipfile_path)?;
             fs::remove_dir_all(unzipped_folder)?;
@@ -462,6 +459,7 @@ fn get_plugin_folder(plugin_format: &str) -> Result<PathBuf, Error> {
 
 fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> Result<(), Error> {
     fs::create_dir_all(&dst)?;
+
     for entry in fs::read_dir(src)? {
         let entry = entry?;
         let file_type = entry.file_type()?;
@@ -471,6 +469,7 @@ fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> Result<(), Erro
             fs::copy(entry.path(), dst.as_ref().join(entry.file_name()))?;
         }
     }
+
     Ok(())
 }
 

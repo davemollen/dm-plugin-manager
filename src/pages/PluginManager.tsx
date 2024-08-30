@@ -39,7 +39,7 @@ export function PluginManager() {
   const [plugins, setPlugins] = useState<Plugins>(initialPlugins);
   const [selectedPlugins, setSelectedPlugins] =
     useState<Plugins>(initialPlugins);
-  const [isFetching, setIsFetching] = useState<boolean>(false);
+  const [isFetching, setIsFetching] = useState<boolean>(true);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [selectedModPlatform, setSelectedModPlatform] =
     useState<ModPlatform>("Dwarf");
