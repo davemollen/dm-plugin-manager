@@ -27,7 +27,7 @@ export function Toast({ id, message, type }: ToastType) {
     >
       <div>
         <p className="font-bold">{heading[type]}</p>
-        <p className="text-sm">{message}</p>
+        <p className="text-sm font-light">{message}</p>
       </div>
       <button onClick={onDismiss}>
         <FontAwesomeIcon icon={faClose} className={colors[type]} />
