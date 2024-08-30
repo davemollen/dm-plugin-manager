@@ -252,14 +252,16 @@ export function PluginManager() {
             )}
           </div>
 
-          <Button
-            onClick={mode === "Install" ? createPlugins : deletePlugins}
-            disabled={noPluginsSelected || isProcessing}
-            isLoading={isProcessing}
-            className="sticky bottom-4 mt-8"
-          >
-            {mode} plugins
-          </Button>
+          {!noPluginsSelected && (
+            <Button
+              onClick={mode === "Install" ? createPlugins : deletePlugins}
+              disabled={isProcessing}
+              isLoading={isProcessing}
+              className="sticky bottom-4 mt-8"
+            >
+              {mode} plugins
+            </Button>
+          )}
         </div>
       )}
     </div>
