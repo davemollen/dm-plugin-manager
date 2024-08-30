@@ -66,7 +66,9 @@ export function PluginManager() {
       setPlugins(plugins);
       setSelectedPlugins({
         ...plugins,
-        "MOD Audio": selectModAudioPlugins(plugins, selectedModPlatform),
+        "MOD Audio": plugins.modIsConnected
+          ? selectModAudioPlugins(plugins, selectedModPlatform)
+          : initialPlugins["MOD Audio"],
       });
     } catch (e) {
       setPlugins(initialPlugins);
