@@ -45,7 +45,7 @@ export function CheckboxSkeleton({ className }: { className?: string }) {
   return (
     <div className={`flex items-center gap-2 ${className ?? ""}`.trim()}>
       <div className="h-5 w-5 rounded bg-gray-200" />
-      <div className="h-6 w-24 rounded-lg bg-gray-200" />
+      <div className="h-6 w-32 rounded-lg bg-gray-200" />
     </div>
   );
 }

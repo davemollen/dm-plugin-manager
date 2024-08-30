@@ -24,3 +24,11 @@ export function Button({ kind = "primary", className, ...props }: ButtonProps) {
     />
   );
 }
+
+export function ButtonSkeleton({ className }: { className?: string }) {
+  return (
+    <div
+      className={`h-12 w-40 animate-pulse rounded-lg bg-gray-200 ${className ?? ""}`.trim()}
+    ></div>
+  );
+}

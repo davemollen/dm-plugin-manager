@@ -1,4 +1,4 @@
-import { Button } from "@/components/Button";
+import { Button, ButtonSkeleton } from "@/components/Button";
 import { Checkbox } from "@/components/Checkbox";
 import { CheckboxList, CheckboxListSkeleton } from "@/components/CheckboxList";
 import {
@@ -129,17 +129,20 @@ export function PluginManager() {
         <RadioButtonListSkeleton count={2} className="mt-2" />
 
         <h4 className="mt-8 font-sans text-xl font-bold">Plugin formats</h4>
-        <CheckboxListSkeleton count={3} className="mt-4" />
-        <CheckboxListSkeleton count={4} className="mt-4" />
-        <div className="mt-4">
-          <CheckboxListSkeleton count={0} />
-          <RadioButtonListSkeleton count={2} className="ml-4 mt-2" />
-          <CheckboxListSkeleton
-            count={2}
-            enableCheckAll={false}
-            className="ml-8 mt-2"
-          />
+        <div className="mt-4 flex flex-col gap-4 lg:flex-row lg:gap-8">
+          <CheckboxListSkeleton count={3} />
+          <CheckboxListSkeleton count={4} />
+          <div>
+            <CheckboxListSkeleton count={0} />
+            <RadioButtonListSkeleton count={2} className="ml-4 mt-2" />
+            <CheckboxListSkeleton
+              count={2}
+              enableCheckAll={false}
+              className="ml-8 mt-2"
+            />
+          </div>
         </div>
+        <ButtonSkeleton className="sticky bottom-4 mt-8" />
       </div>
     );
   }
@@ -165,82 +168,83 @@ export function PluginManager() {
       ) : (
         <div className="mt-8">
           <h4 className="font-sans text-xl font-bold">Plugin formats</h4>
-          {hasVst3Plugins && (
-            <CheckboxList
-              title="VST3"
-              items={plugins?.VST3}
-              selectedItems={selectedPlugins.VST3}
-              onChange={(items) => {
-                setSelectedPlugins({ ...selectedPlugins, VST3: items });
-              }}
-              className="mt-4"
-            />
-          )}
-          {hasClapPlugins && (
-            <CheckboxList
-              title="CLAP"
-              items={plugins?.CLAP}
-              selectedItems={selectedPlugins.CLAP}
-              onChange={(items) => {
-                setSelectedPlugins({ ...selectedPlugins, CLAP: items });
-              }}
-              className="mt-4"
-            />
-          )}
-          {plugins.modIsConnected && hasModPlugins && (
-            <CheckboxList
-              title={selectedModPlatform}
-              items={plugins?.["MOD Audio"][selectedModPlatform]}
-              selectedItems={selectedPlugins["MOD Audio"][selectedModPlatform]}
-              onChange={(items) => {
-                setSelectedPlugins({
-                  ...selectedPlugins,
-                  "MOD Audio": {
-                    ...selectedPlugins["MOD Audio"],
-                    [selectedModPlatform]: items,
-                  },
-                });
-              }}
-              overrideCheckAllComponent={(props) => (
-                <div className="-ml-8">
-                  <Checkbox {...props} id="MOD Audio" name="MOD Audio" />
-                  <RadioButtonList
-                    groupName="MOD Audio"
-                    items={Object.keys(plugins["MOD Audio"]) as ModPlatform[]}
-                    selectedItem={selectedModPlatform}
-                    onChange={(item) => {
-                      setSelectedModPlatform(item);
-                      setSelectedPlugins({
-                        ...selectedPlugins,
-                        ["MOD Audio"]: selectModAudioPlugins(plugins, item),
-                      });
-                    }}
-                    className="ml-4 mt-2"
-                  />
-                </div>
-              )}
-              className="ml-8 mt-4"
-            />
-          )}
-          {plugins.modIsConnected === false && (
-            <>
-              <Checkbox
-                id="MOD Audio"
-                name="MOD Audio"
-                onChange={() => {}}
-                disabled={true}
-                className="mt-4"
+          <div className="mt-4 flex flex-col gap-4 lg:flex-row lg:gap-8">
+            {hasVst3Plugins && (
+              <CheckboxList
+                title="VST3"
+                items={plugins?.VST3}
+                selectedItems={selectedPlugins.VST3}
+                onChange={(items) => {
+                  setSelectedPlugins({ ...selectedPlugins, VST3: items });
+                }}
               />
-              <DisconnectedMod reconnect={fetchPlugins} />
-            </>
-          )}
+            )}
+            {hasClapPlugins && (
+              <CheckboxList
+                title="CLAP"
+                items={plugins?.CLAP}
+                selectedItems={selectedPlugins.CLAP}
+                onChange={(items) => {
+                  setSelectedPlugins({ ...selectedPlugins, CLAP: items });
+                }}
+              />
+            )}
+            {plugins.modIsConnected && hasModPlugins && (
+              <CheckboxList
+                title={selectedModPlatform}
+                items={plugins?.["MOD Audio"][selectedModPlatform]}
+                selectedItems={
+                  selectedPlugins["MOD Audio"][selectedModPlatform]
+                }
+                onChange={(items) => {
+                  setSelectedPlugins({
+                    ...selectedPlugins,
+                    "MOD Audio": {
+                      ...selectedPlugins["MOD Audio"],
+                      [selectedModPlatform]: items,
+                    },
+                  });
+                }}
+                overrideCheckAllComponent={(props) => (
+                  <div className="-ml-8">
+                    <Checkbox {...props} id="MOD Audio" name="MOD Audio" />
+                    <RadioButtonList
+                      groupName="MOD Audio"
+                      items={Object.keys(plugins["MOD Audio"]) as ModPlatform[]}
+                      selectedItem={selectedModPlatform}
+                      onChange={(item) => {
+                        setSelectedModPlatform(item);
+                        setSelectedPlugins({
+                          ...selectedPlugins,
+                          ["MOD Audio"]: selectModAudioPlugins(plugins, item),
+                        });
+                      }}
+                      className="ml-4 mt-2"
+                    />
+                  </div>
+                )}
+                className="ml-8"
+              />
+            )}
+            {plugins.modIsConnected === false && (
+              <div>
+                <Checkbox
+                  id="MOD Audio"
+                  name="MOD Audio"
+                  onChange={() => {}}
+                  disabled={true}
+                />
+                <DisconnectedMod reconnect={fetchPlugins} className="mt-2" />
+              </div>
+            )}
+          </div>
 
           <Button
             onClick={mode === "Install" ? createPlugins : deletePlugins}
             disabled={noPluginsSelected}
             className="sticky bottom-4 mt-8"
           >
-            {mode}
+            {mode} plugins
           </Button>
         </div>
       )}
