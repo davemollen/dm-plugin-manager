@@ -29,7 +29,7 @@ export function Button({
   return (
     <button
       {...props}
-      className={`flex h-12 items-center justify-between gap-2 rounded-lg px-6 font-sans text-lg font-bold shadow-lg ${style[kind]} disabled:cursor-default disabled:bg-panel ${
+      className={`flex h-12 items-center justify-between gap-2 rounded-lg px-6 font-sans text-lg font-bold shadow-lg ${style[kind]} disabled:cursor-default disabled:opacity-50 ${
         className ?? ""
       }`}
     >
