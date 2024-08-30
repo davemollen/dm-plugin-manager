@@ -7,16 +7,20 @@ export default {
   theme: {
     extend: {
       colors: {
-        background: "var(--color-background)",
-        foreground: "var(--color-foreground)",
-        cta: "var(--color-cta)",
-        ctaHover: "var(--color-cta-hover)",
-        link: "var(--color-link)",
-        navItemBackground: "var(--color-nav-item-background)",
-        codebox: "var(--color-codebox)",
-        panel: "var(--color-panel)"
+        background: toRgba('--color-background'),
+        foreground: toRgba('--color-foreground'),
+        cta: toRgba('--color-cta'),
+        ctaHover: toRgba('--color-cta-hover'),
+        link: toRgba('--color-link'),
+        navItemBackground: toRgba('--color-nav-item-background'),
+        codebox: toRgba('--color-codebox'),
+        panel: toRgba('--color-panel'),
       }
     },
   },
   plugins: [],
+}
+
+function toRgba(variableName: string) {
+  return `color-mix(in srgb, var(${variableName}) calc(<alpha-value> * 100%), transparent)`
 }

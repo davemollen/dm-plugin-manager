@@ -9,8 +9,8 @@ export function DisconnectedMod({ reconnect }: { reconnect: () => void }) {
       </p>
       <Button
         kind="secondary"
-        className="mt-4 h-10 px-3 text-sm"
         onClick={reconnect}
+        className="mt-4 h-auto px-3 py-2 text-sm"
       >
         Connect with MOD
       </Button>

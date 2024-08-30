@@ -15,26 +15,26 @@
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
 
-  --color-background: #f9fafb;
-  --color-foreground: #000;
-  --color-cta: #164e63;
-  --color-cta-hover: #0e7490;
-  --color-link: #2563eb;
-  --color-nav-item-background: #e5e7eb;
-  --color-codebox: #111827;
-  --color-panel: #e5e7eb;
+  --color-background: theme(colors.gray.50);
+  --color-foreground: theme(colors.black);
+  --color-cta: theme(colors.cyan.900);
+  --color-cta-hover: theme(colors.cyan.700);
+  --color-link: theme(colors.blue.600);
+  --color-nav-item-background: theme(colors.gray.200);
+  --color-codebox: theme(colors.gray.900);
+  --color-panel: theme(colors.gray.200);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-background: #000;
-    --color-foreground: #f9fafb;
-    --color-cta: #0e7490;
-    --color-cta-hover: #06b6d4;
-    --color-link: #60a5fa;
-    --color-nav-item-background: #000;
-    --color-codebox: #e5e7eb;
-    --color-panel: #374151;
+    --color-background: theme(colors.black);
+    --color-foreground: theme(colors.gray.50);
+    --color-cta: theme(colors.cyan.700);
+    --color-cta-hover: theme(colors.cyan.500);
+    --color-link: theme(colors.blue.400);
+    --color-nav-item-background: theme(colors.black);
+    --color-codebox: theme(colors.gray.200);
+    --color-panel: theme(colors.gray.700);
   }
 }
 
