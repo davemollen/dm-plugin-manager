@@ -2,7 +2,7 @@ import { createContext, ReactNode, useEffect, useReducer, useRef } from "react";
 import { ActionType, toastReducer } from "./ToastContextProvider/toastReducer";
 import { Toasts } from "../components/Toasts";
 
-const TOAST_DISPLAY_TIME = 5000;
+const TOAST_DISPLAY_TIME = 8000;
 
 export const ToastContext = createContext<{
   success: (message: string) => void;
