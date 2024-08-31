@@ -40,7 +40,7 @@ export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(
         {...props}
         ref={ref}
         onClick={onDialogClick}
-        className={`backdrop:bg-background/75 rounded-xl border-0 p-0 ${dialogProps.className ?? ""}`.trim()}
+        className={`rounded-xl border-0 p-0 backdrop:bg-background/75 ${dialogProps.className ?? ""}`.trim()}
       >
         <form
           method="dialog"

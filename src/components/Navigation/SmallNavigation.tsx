@@ -22,7 +22,7 @@ export function SmallNavigation({
   return (
     <>
       <button
-        className={`mt-4 mr-4 self-end ${activeBreakPoint === undefined ? "flex" : "hidden"}`}
+        className={`mr-4 mt-4 self-end ${activeBreakPoint === undefined ? "flex" : "hidden"}`}
         onClick={toggleSmallMenu}
       >
         {smallMenuIsOpen ? (
@@ -33,13 +33,13 @@ export function SmallNavigation({
       </button>
       <nav
         id="small-nav"
-        className={`font-sans mt-4 text-xl font-semibold w-full h-screen flex-col ${smallMenuIsOpen && activeBreakPoint === undefined ? "flex" : "hidden"}`}
+        className={`mt-4 h-screen w-full flex-col font-sans text-xl font-semibold ${smallMenuIsOpen && activeBreakPoint === undefined ? "flex" : "hidden"}`}
       >
         <NavLink
           to="/"
           onClick={closeSmallMenu}
           className={({ isActive }) =>
-            `relative py-3 px-6 hover:text-link ${isActive ? "bg-navItemBackground text-link before:absolute before:top-0 before:left-0 before:bottom-0 before:w-1 before:bg-blue-400" : ""}`
+            `relative px-6 py-3 hover:text-link ${isActive ? "bg-navItemBackground text-link before:absolute before:bottom-0 before:left-0 before:top-0 before:w-1 before:bg-blue-400" : ""}`
           }
         >
           Plugin manager
@@ -48,7 +48,7 @@ export function SmallNavigation({
           to="/mod-plugin-manager"
           onClick={closeSmallMenu}
           className={({ isActive }) =>
-            `relative py-3 px-6 hover:text-link ${isActive ? "bg-navItemBackground text-link before:absolute before:top-0 before:left-0 before:bottom-0 before:w-1 before:bg-blue-400" : ""}`
+            `relative px-6 py-3 hover:text-link ${isActive ? "bg-navItemBackground text-link before:absolute before:bottom-0 before:left-0 before:top-0 before:w-1 before:bg-blue-400" : ""}`
           }
         >
           MOD plugin manager
