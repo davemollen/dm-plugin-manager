@@ -1,25 +1,45 @@
 import { ChangeEvent, ReactNode, RefObject, useEffect, useRef } from "react";
 import { Checkbox, CheckboxSkeleton } from "./Checkbox";
 
+type Kind = "default" | "bordered";
+const style: Record<Kind, string> = {
+  default: "gap-2",
+  bordered: "rounded-xl border border-panel overflow-hidden",
+};
+const checkAllStyle: Record<Kind, string> = {
+  default: "gap-0",
+  bordered: "bg-panel p-2",
+};
+const checkboxStyle: Record<Kind, string> = {
+  default: "pl-4",
+  bordered: "border-b border-panel p-2 pl-6 last:border-none",
+};
+
 export function CheckboxList<T extends string>({
   title,
   items,
   selectedItems,
+  kind = "default",
   onChange,
   overrideCheckAllComponent,
   disabled,
   className,
+  checkAllClassName,
+  checkboxClassName,
 }: {
   title: string;
   items: T[];
   selectedItems: T[];
+  kind?: Kind;
   onChange: (selectedItems: T[]) => void;
   overrideCheckAllComponent?: (props: {
     ref: RefObject<HTMLInputElement>;
-    onCheckAll: (event: ChangeEvent<HTMLInputElement>) => void;
+    onChange: (event: ChangeEvent<HTMLInputElement>) => void;
   }) => ReactNode;
   disabled?: boolean;
   className?: string;
+  checkAllClassName?: string;
+  checkboxClassName?: string;
 }) {
   const ref = useRef<HTMLInputElement>(null);
 
@@ -53,11 +73,9 @@ export function CheckboxList<T extends string>({
   }, [selectedItems, ref]);
 
   return (
-    <div
-      className={`flex max-w-xs flex-col overflow-hidden rounded-xl border border-panel ${className ?? ""}`.trim()}
-    >
+    <div className={`flex flex-col ${style[kind]} ${className ?? ""}`.trim()}>
       {overrideCheckAllComponent ? (
-        overrideCheckAllComponent({ ref, onCheckAll })
+        overrideCheckAllComponent({ ref, onChange: onCheckAll })
       ) : (
         <Checkbox
           ref={ref}
@@ -66,7 +84,7 @@ export function CheckboxList<T extends string>({
           value={title}
           disabled={disabled}
           onChange={onCheckAll}
-          className="bg-panel p-2"
+          className={`${checkAllStyle[kind]} ${checkAllClassName}`.trim()}
         />
       )}
       {items.map((item) => (
@@ -78,7 +96,7 @@ export function CheckboxList<T extends string>({
           onChange={onCheckboxChange}
           checked={selectedItems.includes(item)}
           disabled={disabled}
-          className="border-b border-panel p-2 pl-6 last:border-none"
+          className={`${checkboxStyle[kind]} ${checkboxClassName}`.trim()}
         />
       ))}
     </div>
@@ -88,21 +106,29 @@ export function CheckboxList<T extends string>({
 export function CheckboxListSkeleton({
   count,
   enableCheckAll = true,
+  kind = "default",
   className,
+  checkAllClassName,
+  checkboxClassName,
 }: {
   count: number;
   enableCheckAll?: boolean;
+  kind?: Kind;
   className?: string;
+  checkAllClassName?: string;
+  checkboxClassName?: string;
 }) {
   return (
-    <div
-      className={`flex max-w-xs flex-col overflow-hidden rounded-xl border border-panel ${className ?? ""}`.trim()}
-    >
-      {enableCheckAll && <CheckboxSkeleton className="bg-panel p-2" />}
+    <div className={`flex flex-col ${style[kind]} ${className ?? ""}`.trim()}>
+      {enableCheckAll && (
+        <CheckboxSkeleton
+          className={`${checkAllStyle[kind]} ${checkAllClassName}`.trim()}
+        />
+      )}
       {[...Array(count).keys()].map((i) => (
         <CheckboxSkeleton
           key={i}
-          className="border-b border-panel p-2 pl-6 last:border-none"
+          className={`${checkboxStyle[kind]} ${checkboxClassName}`.trim()}
         />
       ))}
     </div>

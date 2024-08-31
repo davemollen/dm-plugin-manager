@@ -1,5 +1,5 @@
 import { Button } from "@/components/Button";
-import { Checkbox } from "@/components/Checkbox";
+import { Checkbox, CheckboxSkeleton } from "@/components/Checkbox";
 import { CheckboxList, CheckboxListSkeleton } from "@/components/CheckboxList";
 import {
   RadioButtonList,
@@ -130,19 +130,37 @@ export function PluginManager() {
       <div className="w-full">
         <h4 className="font-sans text-xl font-bold">Mode</h4>
 
-        <RadioButtonListSkeleton count={2} className="mt-2" />
+        <RadioButtonListSkeleton
+          count={2}
+          kind="bordered"
+          className="mt-2 w-32"
+        />
 
         <h4 className="mt-8 font-sans text-xl font-bold">Plugin formats</h4>
         <div className="mt-4 flex flex-col gap-4 lg:flex-row">
-          <CheckboxListSkeleton count={3} />
-          <CheckboxListSkeleton count={4} />
-          <div>
-            <CheckboxListSkeleton count={0} />
-            <RadioButtonListSkeleton count={2} className="ml-4 mt-2" />
+          <CheckboxListSkeleton
+            count={3}
+            kind="bordered"
+            className="max-w-xs"
+          />
+          <CheckboxListSkeleton
+            count={4}
+            kind="bordered"
+            className="max-w-xs"
+          />
+          <div className="max-w-xs overflow-hidden rounded-xl border border-panel">
+            <CheckboxSkeleton className="bg-panel p-2" />
+            <RadioButtonListSkeleton
+              count={3}
+              kind="bordered"
+              className="rounded-none border-l-0 border-r-0"
+              radioButtonClassName="pl-4"
+            />
             <CheckboxListSkeleton
-              count={2}
+              count={4}
+              kind="bordered"
               enableCheckAll={false}
-              className="ml-8 mt-2"
+              className="rounded-none border-none"
             />
           </div>
         </div>
@@ -158,7 +176,8 @@ export function PluginManager() {
         selectedItem={mode}
         disabled={isProcessing}
         onChange={(item) => setMode(item)}
-        className="mt-2"
+        className="mt-2 w-36"
+        kind="bordered"
       />
 
       {noPluginsFound ? (
@@ -182,6 +201,8 @@ export function PluginManager() {
                 onChange={(items) => {
                   setSelectedPlugins({ ...selectedPlugins, VST3: items });
                 }}
+                kind="bordered"
+                className="max-w-xs"
               />
             )}
             {hasClapPlugins && (
@@ -193,6 +214,8 @@ export function PluginManager() {
                 onChange={(items) => {
                   setSelectedPlugins({ ...selectedPlugins, CLAP: items });
                 }}
+                kind="bordered"
+                className="max-w-xs"
               />
             )}
             {plugins.modIsConnected && hasModPlugins && (
@@ -212,13 +235,21 @@ export function PluginManager() {
                     },
                   });
                 }}
+                kind="bordered"
+                className="max-w-xs"
+                checkboxClassName="!pl-10"
                 overrideCheckAllComponent={(props) => (
-                  <div className="-ml-8">
+                  <div>
                     <Checkbox
                       {...props}
                       id="MOD Audio"
                       name="MOD Audio"
                       value="MOD Audio"
+                      className="bg-panel p-2"
+                      disabled={
+                        !selectedPlugins["MOD Audio"][selectedModPlatform]
+                          .length
+                      }
                     />
                     <RadioButtonList
                       groupName="MOD Audio"
@@ -232,11 +263,12 @@ export function PluginManager() {
                           ["MOD Audio"]: selectModAudioPlugins(plugins, item),
                         });
                       }}
-                      className="ml-4 mt-2"
+                      kind="bordered"
+                      className="rounded-none border-l-0 border-r-0"
+                      radioButtonClassName="pl-4"
                     />
                   </div>
                 )}
-                className="ml-8"
               />
             )}
             {plugins.modIsConnected === false && (
