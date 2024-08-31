@@ -7,6 +7,7 @@ use std::{
     fs::{self, File},
     io,
     path::{Path, PathBuf},
+    process::Command,
 };
 use tauri::utils::platform;
 use thiserror::Error;
@@ -36,6 +37,9 @@ pub enum Error {
 
     #[error("Unknown plugin format")]
     NoPluginFormat,
+
+    #[error("Failed to create directory: {0}")]
+    CreateDirectoryError(String),
 }
 
 impl serde::Serialize for Error {
@@ -176,6 +180,10 @@ pub async fn create_plugins(plugins: HashMap<String, serde_json::Value>) -> Resu
     if let Some(vst3_value) = plugins.get("VST3") {
         if let Value::Array(plugins) = vst3_value {
             if !plugins.is_empty() {
+                if get_os_type().as_str() == "macOS" {
+                    create_plugin_folder("VST3")?;
+                }
+
                 let futures: Vec<_> = plugins
                     .iter()
                     .map(|plugin| async move {
@@ -196,6 +204,10 @@ pub async fn create_plugins(plugins: HashMap<String, serde_json::Value>) -> Resu
     if let Some(clap_value) = plugins.get("CLAP") {
         if let Value::Array(plugins) = clap_value {
             if !plugins.is_empty() {
+                if get_os_type().as_str() == "macOS" {
+                    create_plugin_folder("CLAP")?;
+                }
+
                 let futures: Vec<_> = plugins
                     .iter()
                     .map(|plugin| async move {
@@ -475,4 +487,38 @@ fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> Result<(), Erro
 
 fn get_os_type() -> String {
     platform::Target::current().to_string()
+}
+
+fn create_plugin_folder(plugin_format: &str) -> Result<(), Error> {
+    let folder_path = get_plugin_folder(plugin_format)?;
+
+    if folder_path.exists() {
+        return Ok(());
+    }
+
+    let username_cmd = Command::new("id").arg("-un").output()?;
+    if username_cmd.status.success() {
+        let username = String::from_utf8_lossy(&username_cmd.stdout).to_string();
+
+        let create_dir_script = format!(
+            r#"do shell script "install -d -m 0755 -o {} {}" with administrator privileges"#,
+            username,
+            folder_path.to_string_lossy()
+        );
+        let create_dir_cmd = Command::new("osascript")
+            .arg("-e")
+            .arg(create_dir_script)
+            .output()?;
+        if create_dir_cmd.status.success() {
+            Ok(())
+        } else {
+            Err(Error::CreateDirectoryError(
+                String::from_utf8_lossy(&create_dir_cmd.stderr).to_string(),
+            ))
+        }
+    } else {
+        Err(Error::CreateDirectoryError(
+            String::from_utf8_lossy(&username_cmd.stderr).to_string(),
+        ))
+    }
 }
