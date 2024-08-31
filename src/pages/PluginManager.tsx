@@ -153,14 +153,14 @@ export function PluginManager() {
             <RadioButtonListSkeleton
               count={3}
               kind="bordered"
-              className="rounded-none border-l-0 border-r-0"
+              className="!rounded-none !border-l-0 !border-r-0"
               radioButtonClassName="pl-4"
             />
             <CheckboxListSkeleton
               count={4}
               kind="bordered"
               enableCheckAll={false}
-              className="rounded-none border-none"
+              className="!rounded-none !border-none"
             />
           </div>
         </div>
@@ -264,7 +264,7 @@ export function PluginManager() {
                         });
                       }}
                       kind="bordered"
-                      className="rounded-none border-l-0 border-r-0"
+                      className="!rounded-none !border-l-0 !border-r-0"
                       radioButtonClassName="pl-4"
                     />
                   </div>
