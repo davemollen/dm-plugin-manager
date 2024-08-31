@@ -1004,6 +1004,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "dm-plugin-manager"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "dirs",
+ "futures",
+ "reqwest",
+ "russh",
+ "serde",
+ "serde_json",
+ "tar",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-log",
+ "thiserror",
+ "tokio",
+]
+
+[[package]]
 name = "dpi"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2378,25 +2397,6 @@ dependencies = [
  "libc",
  "wasi 0.11.0+wasi-snapshot-preview1",
  "windows-sys 0.52.0",
-]
-
-[[package]]
-name = "mod-plugin-manager"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "dirs",
- "futures",
- "reqwest",
- "russh",
- "serde",
- "serde_json",
- "tar",
- "tauri",
- "tauri-build",
- "tauri-plugin-log",
- "thiserror",
- "tokio",
 ]
 
 [[package]]

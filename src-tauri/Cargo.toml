@@ -1,7 +1,7 @@
 [package]
-name = "mod-plugin-manager"
+name = "dm-plugin-manager"
 version = "0.1.0"
-description = "MOD plugin manager"
+description = "DM plugin manager"
 authors = ["Dave Mollen"]
 license = ""
 repository = ""

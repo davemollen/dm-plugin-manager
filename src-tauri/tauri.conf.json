@@ -1,7 +1,7 @@
 {
-  "productName": "mod-plugin-manager",
+  "productName": "dm-plugin-manager",
   "version": "0.1.0",
-  "identifier": "com.mod-plugin-manager.app",
+  "identifier": "com.dm-plugin-manager.app",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:5173",
@@ -11,7 +11,7 @@
   "app": {
     "windows": [
       {
-        "title": "MOD Plugin Manager",
+        "title": "DM Plugin Manager",
         "width": 800,
         "height": 600,
         "resizable": true,
