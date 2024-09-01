@@ -12,9 +12,9 @@ export default {
         cta: toRgba('--color-cta'),
         ctaHover: toRgba('--color-cta-hover'),
         link: toRgba('--color-link'),
-        navItemBackground: toRgba('--color-nav-item-background'),
         codebox: toRgba('--color-codebox'),
         panel: toRgba('--color-panel'),
+        onBackground: toRgba('--color-on-background')
       }
     },
   },

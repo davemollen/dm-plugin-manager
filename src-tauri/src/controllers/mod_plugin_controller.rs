@@ -56,27 +56,16 @@ pub async fn create_mod_plugins(files: Vec<ArrayBufWithPath>) -> Result<Vec<Stri
         let destination_path = Path::new(".lv2").join(path);
         let destination_folder_path = derive_destination_folder_path(&destination_path);
         let mkdir_command = format!("mkdir -p {}", destination_folder_path);
-        ssh_service.execute_command(&mkdir_command, None).await?;
+        let cat_command = format!("cat > {}", destination_path.to_string_lossy());
 
-        match {
-            let cat_command = format!("cat > {}", destination_path.to_str().unwrap());
-            ssh_service
-                .execute_command(&cat_command, Some(&file.buffer))
-                .await?;
-            Ok(())
-        } {
-            Ok(_) => {
-                let created_plugin_name = extract_root_folder_name(path);
-                if !plugin_names.contains(&created_plugin_name) {
-                    plugin_names.push(created_plugin_name)
-                }
-                return Ok(plugin_names);
-            }
-            Err(e) => {
-                let rm_command = format!("rm -rf {}", destination_folder_path);
-                ssh_service.execute_command(&rm_command, None).await?;
-                return Err(e);
-            }
+        ssh_service.execute_command(&mkdir_command, None).await?;
+        ssh_service
+            .execute_command(&cat_command, Some(&file.buffer))
+            .await?;
+
+        let created_plugin_name = extract_root_folder_name(path);
+        if !plugin_names.contains(&created_plugin_name) {
+            plugin_names.push(created_plugin_name)
         }
     }
 

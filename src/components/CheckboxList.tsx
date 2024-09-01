@@ -22,6 +22,7 @@ export function CheckboxList<T extends string>({
   kind = "default",
   onChange,
   overrideCheckAllComponent,
+  emptyComponent,
   disabled,
   className,
   checkAllClassName,
@@ -32,9 +33,12 @@ export function CheckboxList<T extends string>({
   selectedItems: T[];
   kind?: Kind;
   onChange: (selectedItems: T[]) => void;
+  emptyComponent?: ReactNode;
   overrideCheckAllComponent?: (props: {
     ref: RefObject<HTMLInputElement>;
     onChange: (event: ChangeEvent<HTMLInputElement>) => void;
+    disabled?: boolean;
+    items: T[];
   }) => ReactNode;
   disabled?: boolean;
   className?: string;
@@ -75,7 +79,12 @@ export function CheckboxList<T extends string>({
   return (
     <div className={`flex flex-col ${style[kind]} ${className ?? ""}`.trim()}>
       {overrideCheckAllComponent ? (
-        overrideCheckAllComponent({ ref, onChange: onCheckAll })
+        overrideCheckAllComponent({
+          ref,
+          onChange: onCheckAll,
+          disabled,
+          items,
+        })
       ) : (
         <Checkbox
           ref={ref}
@@ -99,6 +108,7 @@ export function CheckboxList<T extends string>({
           className={`${checkboxStyle[kind]} ${checkboxClassName}`.trim()}
         />
       ))}
+      {items.length === 0 && emptyComponent}
     </div>
   );
 }

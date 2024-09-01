@@ -60,7 +60,10 @@ pub async fn get_installable_plugins() -> Result<HashMap<String, serde_json::Val
             data.insert("modIsConnected".to_string(), json!(false));
             Ok(())
         }
-        _ => result,
+        _ => {
+            data.insert("modIsConnected".to_string(), json!(true));
+            result
+        }
     }?;
     mod_audio.insert(
         "Dwarf".to_string(),
@@ -83,18 +86,27 @@ pub async fn get_installable_plugins() -> Result<HashMap<String, serde_json::Val
 }
 
 #[tauri::command]
-pub async fn get_installed_plugins() -> Result<HashMap<String, serde_json::Value>, Error> {
+pub async fn get_installed_plugins(
+    vst3_folder: Option<String>,
+    clap_folder: Option<String>,
+) -> Result<HashMap<String, serde_json::Value>, Error> {
     let mut installed_plugins: HashMap<String, serde_json::Value> = HashMap::new();
     let installable_plugins = get_installable_plugins().await?;
 
     if let Some(vst3_value) = installable_plugins.get("VST3") {
         if let Value::Array(plugins) = vst3_value {
             if !plugins.is_empty() {
+                let plugin_folder = if let Some(vst3_folder) = vst3_folder {
+                    PathBuf::from(vst3_folder)
+                } else {
+                    get_plugin_folder("VST3")?
+                };
+
                 let found_plugins: Vec<Value> = plugins
                     .iter()
                     .filter(|plugin| {
                         if let Some(plugin_name) = plugin.as_str() {
-                            plugin_exists(plugin_name, "VST3").unwrap_or(false)
+                            plugin_exists(&plugin_folder, plugin_name, "VST3").unwrap_or(false)
                         } else {
                             false
                         }
@@ -110,11 +122,17 @@ pub async fn get_installed_plugins() -> Result<HashMap<String, serde_json::Value
     if let Some(clap_value) = installable_plugins.get("CLAP") {
         if let Value::Array(plugins) = clap_value {
             if !plugins.is_empty() {
+                let plugin_folder = if let Some(clap_folder) = clap_folder {
+                    PathBuf::from(clap_folder)
+                } else {
+                    get_plugin_folder("CLAP")?
+                };
+
                 let found_plugins: Vec<Value> = plugins
                     .iter()
                     .filter(|plugin| {
                         if let Some(plugin_name) = plugin.as_str() {
-                            plugin_exists(plugin_name, "CLAP").unwrap_or(false)
+                            plugin_exists(&plugin_folder, plugin_name, "CLAP").unwrap_or(false)
                         } else {
                             false
                         }
@@ -141,15 +159,20 @@ pub async fn get_installed_plugins() -> Result<HashMap<String, serde_json::Value
                                     .insert("modIsConnected".to_string(), json!(false));
                                 return Ok(installed_plugins);
                             }
-                            Err(e) => Err(Error::ModPluginControllerError(e)),
-                            Ok(plugins) => Ok(plugins),
+                            _ => {
+                                installed_plugins.insert("modIsConnected".to_string(), json!(true));
+                                result
+                            }
                         }?;
 
-                        let found_plugins = plugins
+                        let found_plugins: Vec<Value> = plugins
                             .iter()
                             .filter(|plugin| {
                                 if let Some(plugin_name) = plugin.as_str() {
-                                    all_plugins.contains(&plugin_name.to_string())
+                                    match get_plugin_bundle_name(plugin_name, "MOD Audio") {
+                                        Ok(bundle_name) => all_plugins.contains(&bundle_name),
+                                        Err(_) => false,
+                                    }
                                 } else {
                                     false
                                 }
@@ -172,19 +195,32 @@ pub async fn get_installed_plugins() -> Result<HashMap<String, serde_json::Value
 }
 
 #[tauri::command]
-pub async fn create_plugins(plugins: HashMap<String, serde_json::Value>) -> Result<(), Error> {
+pub async fn create_plugins(
+    plugins: HashMap<String, serde_json::Value>,
+    vst3_folder: Option<String>,
+    clap_folder: Option<String>,
+) -> Result<(), Error> {
     if let Some(vst3_value) = plugins.get("VST3") {
         if let Value::Array(plugins) = vst3_value {
             if !plugins.is_empty() {
+                let plugin_folder = if let Some(vst3_folder) = vst3_folder {
+                    PathBuf::from(vst3_folder)
+                } else {
+                    get_plugin_folder("VST3")?
+                };
+
                 let futures: Vec<_> = plugins
                     .iter()
-                    .map(|plugin| async move {
-                        let plugin_name = plugin.as_str().unwrap();
-                        println!("Started installing VST3 plugin: {}", plugin_name);
-                        create_plugin(plugin_name, "VST3").await?;
-                        println!("Finished installing VST3 plugin: {}", plugin_name);
+                    .map(|plugin| {
+                        let plugin_folder = plugin_folder.clone();
+                        async move {
+                            let plugin_name = plugin.as_str().unwrap();
+                            println!("Started installing VST3 plugin: {}", plugin_name);
+                            create_plugin(&plugin_folder, plugin_name, "VST3").await?;
+                            println!("Finished installing VST3 plugin: {}", plugin_name);
 
-                        Ok::<(), Error>(())
+                            Ok::<(), Error>(())
+                        }
                     })
                     .collect();
 
@@ -196,15 +232,24 @@ pub async fn create_plugins(plugins: HashMap<String, serde_json::Value>) -> Resu
     if let Some(clap_value) = plugins.get("CLAP") {
         if let Value::Array(plugins) = clap_value {
             if !plugins.is_empty() {
+                let plugin_folder = if let Some(clap_folder) = clap_folder {
+                    PathBuf::from(clap_folder)
+                } else {
+                    get_plugin_folder("CLAP")?
+                };
+
                 let futures: Vec<_> = plugins
                     .iter()
-                    .map(|plugin| async move {
-                        let plugin_name = plugin.as_str().unwrap();
-                        println!("Started installing CLAP plugin: {}", plugin_name);
-                        create_plugin(plugin_name, "CLAP").await?;
-                        println!("Finished installing CLAP plugin: {}", plugin_name);
+                    .map(|plugin| {
+                        let plugin_folder = plugin_folder.clone();
+                        async move {
+                            let plugin_name = plugin.as_str().unwrap();
+                            println!("Started installing CLAP plugin: {}", plugin_name);
+                            create_plugin(&plugin_folder, plugin_name, "CLAP").await?;
+                            println!("Finished installing CLAP plugin: {}", plugin_name);
 
-                        Ok::<(), Error>(())
+                            Ok::<(), Error>(())
+                        }
                     })
                     .collect();
 
@@ -249,7 +294,69 @@ pub async fn create_plugins(plugins: HashMap<String, serde_json::Value>) -> Resu
 }
 
 #[tauri::command]
-pub async fn delete_plugins(plugins: HashMap<String, serde_json::Value>) -> Result<(), Error> {
+pub async fn delete_plugins(
+    plugins: HashMap<String, serde_json::Value>,
+    vst3_folder: Option<String>,
+    clap_folder: Option<String>,
+) -> Result<(), Error> {
+    if let Some(vst3_value) = plugins.get("VST3") {
+        if let Value::Array(plugins) = vst3_value {
+            if !plugins.is_empty() {
+                let plugin_folder = if let Some(vst3_folder) = vst3_folder {
+                    PathBuf::from(vst3_folder)
+                } else {
+                    get_plugin_folder("VST3")?
+                };
+
+                let futures: Vec<_> = plugins
+                    .iter()
+                    .map(|plugin| {
+                        let plugin_folder = plugin_folder.clone();
+                        async move {
+                            let plugin_name = plugin.as_str().unwrap();
+                            println!("Started uninstalling VST3 plugin: {}", plugin_name);
+                            delete_plugin(&plugin_folder, plugin_name, "VST3").await?;
+                            println!("Finished uninstalling VST3 plugin: {}", plugin_name);
+
+                            Ok::<(), Error>(())
+                        }
+                    })
+                    .collect();
+
+                try_join_all(futures).await?;
+            }
+        }
+    }
+
+    if let Some(clap_value) = plugins.get("CLAP") {
+        if let Value::Array(plugins) = clap_value {
+            if !plugins.is_empty() {
+                let plugin_folder = if let Some(clap_folder) = clap_folder {
+                    PathBuf::from(clap_folder)
+                } else {
+                    get_plugin_folder("CLAP")?
+                };
+
+                let futures: Vec<_> = plugins
+                    .iter()
+                    .map(|plugin| {
+                        let plugin_folder = plugin_folder.clone();
+                        async move {
+                            let plugin_name = plugin.as_str().unwrap();
+                            println!("Started uninstalling CLAP plugin: {}", plugin_name);
+                            delete_plugin(&plugin_folder, plugin_name, "CLAP").await?;
+                            println!("Finished uninstalling CLAP plugin: {}", plugin_name);
+
+                            Ok::<(), Error>(())
+                        }
+                    })
+                    .collect();
+
+                try_join_all(futures).await?;
+            }
+        }
+    }
+
     if let Some(mod_value) = plugins.get("MOD Audio") {
         if let Value::Object(mod_map) = mod_value {
             for (platform, value) in mod_map {
@@ -260,11 +367,12 @@ pub async fn delete_plugins(plugins: HashMap<String, serde_json::Value>) -> Resu
                             .iter()
                             .map(|plugin| async move {
                                 let plugin_name = plugin.as_str().unwrap();
+                                let bundle_name = get_plugin_bundle_name(plugin_name, "MOD Audio")?;
                                 println!(
                                     "Started uninstalling MOD {} plugin: {}",
                                     platform, plugin_name
                                 );
-                                mod_plugin_controller::delete_mod_plugin(plugin_name.to_string())
+                                mod_plugin_controller::delete_mod_plugin(bundle_name)
                                     .await?;
                                 println!(
                                     "Finished uninstalling MOD {} plugin: {}",
@@ -282,57 +390,25 @@ pub async fn delete_plugins(plugins: HashMap<String, serde_json::Value>) -> Resu
         }
     }
 
-    if let Some(vst3_value) = plugins.get("VST3") {
-        if let Value::Array(plugins) = vst3_value {
-            if !plugins.is_empty() {
-                let futures: Vec<_> = plugins
-                    .iter()
-                    .map(|plugin| async move {
-                        let plugin_name = plugin.as_str().unwrap();
-                        println!("Started uninstalling VST3 plugin: {}", plugin_name);
-                        delete_plugin(plugin_name, "VST3").await?;
-                        println!("Finished uninstalling VST3 plugin: {}", plugin_name);
-
-                        Ok::<(), Error>(())
-                    })
-                    .collect();
-
-                try_join_all(futures).await?;
-            }
-        }
-    }
-
-    if let Some(clap_value) = plugins.get("CLAP") {
-        if let Value::Array(plugins) = clap_value {
-            if !plugins.is_empty() {
-                let futures: Vec<_> = plugins
-                    .iter()
-                    .map(|plugin| async move {
-                        let plugin_name = plugin.as_str().unwrap();
-                        println!("Started uninstalling CLAP plugin: {}", plugin_name);
-                        delete_plugin(plugin_name, "CLAP").await?;
-                        println!("Finished uninstalling CLAP plugin: {}", plugin_name);
-
-                        Ok::<(), Error>(())
-                    })
-                    .collect();
-
-                try_join_all(futures).await?;
-            }
-        }
-    }
-
     Ok(())
 }
 
 async fn create_mod_plugin(plugin_name: &str, mod_platform: Option<&str>) -> Result<(), Error> {
     let zipfile_path = download_zip_file(plugin_name, mod_platform).await?;
+    let bundle_name = get_plugin_bundle_name(plugin_name, "MOD Audio")?;
+    let starts_with = match zipfile_path.with_extension("").file_name() {
+        Some(folder) => Ok(PathBuf::from(folder).join(&bundle_name)),
+        None => Err(Error::NoDownloadFile),
+    }?;
 
-    match {
-        let files = ZipService::unzip_to_u8(&zipfile_path)?;
-        mod_plugin_controller::create_mod_plugins(files).await?;
-        Ok(())
-    } {
+    let unzip_result = ZipService::unzip_to_u8(&zipfile_path, &starts_with).map_err(Error::from);
+    let copy_result = match unzip_result {
+        Ok(files) => mod_plugin_controller::create_mod_plugins(files)
+            .await
+            .map_err(Error::from),
+        Err(e) => Err(e),
+    };
+    match copy_result {
         Ok(_) => {
             fs::remove_file(&zipfile_path)?;
             return Ok(());
@@ -344,19 +420,19 @@ async fn create_mod_plugin(plugin_name: &str, mod_platform: Option<&str>) -> Res
     }
 }
 
-async fn create_plugin(plugin_name: &str, plugin_format: &str) -> Result<(), Error> {
-    let plugin_file_name = get_plugin_file_name(plugin_name, plugin_format)?;
-    let plugin_path = get_plugin_path(plugin_name, plugin_format)?;
+async fn create_plugin(
+    plugin_folder: &PathBuf,
+    plugin_name: &str,
+    plugin_format: &str,
+) -> Result<(), Error> {
+    let bundle_name = get_plugin_bundle_name(plugin_name, plugin_format)?;
+    let plugin_path = get_plugin_path(plugin_folder, plugin_name, plugin_format)?;
     let zipfile_path = download_zip_file(plugin_name, None).await?;
     let unzipped_folder = zipfile_path.with_extension("");
-    println!(
-        "Unzipped folder path: {}",
-        unzipped_folder.to_string_lossy()
-    );
 
     let unzip_result = ZipService::unzip(&zipfile_path).map_err(Error::from);
     let copy_result = unzip_result.and_then(|_| {
-        copy_dir_all(unzipped_folder.join(&plugin_file_name), &plugin_path).map_err(Error::from)
+        copy_dir_all(unzipped_folder.join(&bundle_name), &plugin_path).map_err(Error::from)
     });
     match copy_result {
         Ok(_) => {
@@ -373,15 +449,23 @@ async fn create_plugin(plugin_name: &str, plugin_format: &str) -> Result<(), Err
     }
 }
 
-async fn delete_plugin(plugin_name: &str, plugin_format: &str) -> Result<(), Error> {
-    let plugin_path = get_plugin_path(plugin_name, plugin_format)?;
+async fn delete_plugin(
+    plugin_folder: &PathBuf,
+    plugin_name: &str,
+    plugin_format: &str,
+) -> Result<(), Error> {
+    let plugin_path = get_plugin_path(plugin_folder, plugin_name, plugin_format)?;
     fs::remove_dir_all(&plugin_path)?;
 
     Ok(())
 }
 
-fn plugin_exists(plugin_name: &str, plugin_format: &str) -> Result<bool, Error> {
-    let plugin_path = get_plugin_path(plugin_name, plugin_format)?;
+fn plugin_exists(
+    plugin_folder: &PathBuf,
+    plugin_name: &str,
+    plugin_format: &str,
+) -> Result<bool, Error> {
+    let plugin_path = get_plugin_path(plugin_folder, plugin_name, plugin_format)?;
     let exists = Path::exists(&plugin_path);
 
     Ok(exists)
@@ -415,25 +499,33 @@ async fn download_zip_file(
 
 fn get_download_file_name(plugin_name: &str, mod_platform: Option<&str>) -> Result<String, Error> {
     let os = match (get_os_type().as_str(), mod_platform) {
-        ("macOS", None) => Ok("macos".to_string()),
-        ("windows", None) => Ok("windows".to_string()),
-        ("linux", None) => Ok("ubuntu".to_string()),
-        (_, Some(mod_platform)) => Ok(mod_platform.to_string()),
+        ("macOS", None) => Ok("vst-and-clap-macos".to_string()),
+        ("windows", None) => Ok("vst-and-clap-windows".to_string()),
+        ("linux", None) => Ok("vst-and-clap-ubuntu".to_string()),
+        (_, Some(mod_platform)) => match mod_platform {
+            "Dwarf" => Ok("moddwarf-new".to_string()),
+            "Duo" => Ok("modduo-new".to_string()),
+            "DuoX" => Ok("modduox-new".to_string()),
+            _ => Err(Error::NoDownloadFile),
+        },
         _ => Err(Error::NoDownloadFile),
     }?;
 
-    Ok(format!("{0}-vst-and-clap-{1}.zip", plugin_name, os))
+    Ok(format!("{0}-{1}.zip", plugin_name, os))
 }
 
-fn get_plugin_path(plugin_name: &str, plugin_format: &str) -> Result<PathBuf, Error> {
-    let plugin_folder = get_plugin_folder(plugin_format)?;
-    let plugin_file_name = get_plugin_file_name(plugin_name, plugin_format)?;
-    let plugin_path = plugin_folder.join(&plugin_file_name);
+fn get_plugin_path(
+    plugin_folder: &PathBuf,
+    plugin_name: &str,
+    plugin_format: &str,
+) -> Result<PathBuf, Error> {
+    let bundle_name = get_plugin_bundle_name(plugin_name, plugin_format)?;
+    let plugin_path = plugin_folder.join(&bundle_name);
 
     Ok(plugin_path)
 }
 
-fn get_plugin_file_name(plugin_name: &str, plugin_format: &str) -> Result<String, Error> {
+fn get_plugin_bundle_name(plugin_name: &str, plugin_format: &str) -> Result<String, Error> {
     match plugin_format {
         "VST3" => Ok(format!("{}.vst3", plugin_name)),
         "CLAP" => Ok(format!("{}.clap", plugin_name)),

@@ -45,7 +45,7 @@ export function RadioButtonList<T extends string>({
           checked={item === selectedItem}
           disabled={disabled}
           onChange={onRadioButtonChange}
-          className={`${radioButtonStyle[kind]} ${radioButtonClassName}`.trim()}
+          className={`${radioButtonStyle[kind]} ${radioButtonClassName ?? ""}`.trim()}
         />
       ))}
     </div>

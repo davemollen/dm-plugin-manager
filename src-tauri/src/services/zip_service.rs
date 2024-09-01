@@ -38,6 +38,7 @@ impl ZipService {
 
     pub fn unzip_to_u8(
         file_path: &PathBuf,
+        starts_with: &PathBuf,
     ) -> Result<Vec<mod_plugin_controller::ArrayBufWithPath>, io::Error> {
         let mut result: Vec<mod_plugin_controller::ArrayBufWithPath> = Vec::new();
         let file = File::open(file_path)?;
@@ -46,7 +47,12 @@ impl ZipService {
         for entry in archive.entries()? {
             let mut entry = entry?;
             let path = entry.path()?;
-            let path = path.to_str().unwrap().to_string();
+            if !path.starts_with(starts_with) {
+                continue;
+            };
+
+            let stripped_path = path.strip_prefix(starts_with.parent().unwrap()).unwrap();
+            let path = stripped_path.to_string_lossy().to_string();
 
             if entry.header().entry_type().is_file() {
                 let mut buffer = Vec::new();

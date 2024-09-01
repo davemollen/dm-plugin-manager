@@ -16,7 +16,9 @@ export function RadioButton({
   ...props
 }: RadioButtonProps) {
   return (
-    <div className={`relative flex items-center gap-2 ${className ?? ""}`}>
+    <div
+      className={`relative flex items-center gap-2 ${className ?? ""}`.trim()}
+    >
       <input
         {...props}
         type="radio"
