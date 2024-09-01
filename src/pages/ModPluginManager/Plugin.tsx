@@ -6,11 +6,13 @@ import { faSpinner } from "@fortawesome/free-solid-svg-icons/faSpinner";
 
 export function Plugin({
   name,
+  canBeRemoved = true,
   onRemove,
   isRemoving,
   className,
 }: {
   name: string;
+  canBeRemoved?: boolean;
   onRemove: (name: string) => void;
   isRemoving: boolean;
   className?: string;
@@ -37,13 +39,15 @@ export function Plugin({
         className={`flex h-12 w-full items-center justify-between rounded-xl border-2 border-foreground px-2 py-1 text-lg ${className ?? ""}`.trim()}
       >
         <span className="truncate">{name}</span>
-        <button onClick={onButtonClick}>
-          {isRemoving ? (
-            <FontAwesomeIcon icon={faSpinner} className="animate-spin" />
-          ) : (
-            <FontAwesomeIcon icon={faTrashCan} className="hover:text-link" />
-          )}
-        </button>
+        {canBeRemoved && (
+          <button onClick={onButtonClick}>
+            {isRemoving ? (
+              <FontAwesomeIcon icon={faSpinner} className="animate-spin" />
+            ) : (
+              <FontAwesomeIcon icon={faTrashCan} className="hover:text-link" />
+            )}
+          </button>
+        )}
       </li>
       <Dialog
         ref={ref}

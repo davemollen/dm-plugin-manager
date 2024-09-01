@@ -158,6 +158,7 @@ export function ModPluginManager() {
             <Plugin
               key={name}
               name={name}
+              canBeRemoved={name.startsWith("dm-")}
               onRemove={removePlugin}
               isRemoving={removals.includes(name)}
             />
