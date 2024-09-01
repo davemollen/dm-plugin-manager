@@ -20,9 +20,9 @@
   --color-cta: theme(colors.cyan.900);
   --color-cta-hover: theme(colors.cyan.700);
   --color-link: theme(colors.blue.600);
-  --color-nav-item-background: theme(colors.gray.200);
   --color-codebox: theme(colors.gray.900);
   --color-panel: theme(colors.gray.200);
+  --color-on-background: theme(colors.gray.100);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -32,9 +32,9 @@
     --color-cta: theme(colors.cyan.700);
     --color-cta-hover: theme(colors.cyan.500);
     --color-link: theme(colors.blue.400);
-    --color-nav-item-background: theme(colors.black);
     --color-codebox: theme(colors.gray.200);
     --color-panel: theme(colors.gray.700);
+    --color-on-background: theme(colors.gray.800);
   }
 }
 

@@ -21,6 +21,8 @@ pub fn run() {
             }
             Ok(())
         })
+        .plugin(tauri_plugin_os::init())
+        .plugin(tauri_plugin_dialog::init())
         .plugin(
             tauri_plugin_log::Builder::new()
                 .clear_targets()

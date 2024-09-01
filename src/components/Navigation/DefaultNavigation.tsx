@@ -6,7 +6,7 @@ export function DefaultNavigation() {
       <NavLink
         to="/"
         className={({ isActive }) =>
-          `relative px-6 py-3 hover:text-link ${isActive ? "bg-navItemBackground text-link before:absolute before:bottom-0 before:left-0 before:top-0 before:w-1 before:bg-link" : ""}`
+          `relative px-6 py-3 hover:text-link ${isActive ? "bg-onBackground text-link before:absolute before:bottom-0 before:left-0 before:top-0 before:w-1 before:bg-link" : ""}`
         }
       >
         Plugin manager
@@ -14,7 +14,7 @@ export function DefaultNavigation() {
       <NavLink
         to="/mod-plugin-manager"
         className={({ isActive }) =>
-          `relative px-6 py-3 hover:text-link ${isActive ? "bg-navItemBackground text-link before:absolute before:bottom-0 before:left-0 before:top-0 before:w-1 before:bg-link" : ""}`
+          `relative px-6 py-3 hover:text-link ${isActive ? "bg-onBackground text-link before:absolute before:bottom-0 before:left-0 before:top-0 before:w-1 before:bg-link" : ""}`
         }
       >
         MOD plugin manager

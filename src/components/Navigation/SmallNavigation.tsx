@@ -39,7 +39,7 @@ export function SmallNavigation({
           to="/"
           onClick={closeSmallMenu}
           className={({ isActive }) =>
-            `relative px-6 py-3 hover:text-link ${isActive ? "bg-navItemBackground text-link before:absolute before:bottom-0 before:left-0 before:top-0 before:w-1 before:bg-blue-400" : ""}`
+            `relative px-6 py-3 hover:text-link ${isActive ? "bg-onBackground text-link before:absolute before:bottom-0 before:left-0 before:top-0 before:w-1 before:bg-blue-400" : ""}`
           }
         >
           Plugin manager
@@ -48,7 +48,7 @@ export function SmallNavigation({
           to="/mod-plugin-manager"
           onClick={closeSmallMenu}
           className={({ isActive }) =>
-            `relative px-6 py-3 hover:text-link ${isActive ? "bg-navItemBackground text-link before:absolute before:bottom-0 before:left-0 before:top-0 before:w-1 before:bg-blue-400" : ""}`
+            `relative px-6 py-3 hover:text-link ${isActive ? "bg-onBackground text-link before:absolute before:bottom-0 before:left-0 before:top-0 before:w-1 before:bg-blue-400" : ""}`
           }
         >
           MOD plugin manager
