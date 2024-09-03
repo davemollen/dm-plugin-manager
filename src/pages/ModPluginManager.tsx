@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { DropZone, DropZoneFile } from "@/components/DropZone";
 import { useBrowserSupport } from "@/hooks/useBrowserSupport";
-import { useToast } from "@/hooks/useToast";
+import { useToastContext } from "@/hooks/useToastContext";
 import { UnsupportedBrowser } from "./ModPluginManager/UnsupportedBrowser";
 import { DisconnectedMod } from "./ModPluginManager/DisconnectedMod";
 import { Plugin } from "./ModPluginManager/Plugin";
@@ -18,7 +18,7 @@ export function ModPluginManager() {
   const [modIsDisconnected, setModIsDisconnected] = useState<boolean>(false);
   const [plugins, setPlugins] = useState<string[] | undefined>();
   const { supportsWebkitGetAsEntry } = useBrowserSupport();
-  const toast = useToast();
+  const toast = useToastContext();
 
   async function getPlugins() {
     try {

@@ -48,143 +48,159 @@ impl serde::Serialize for Error {
 }
 
 #[tauri::command]
-pub async fn get_installable_plugins() -> Result<HashMap<String, serde_json::Value>, Error> {
+pub async fn get_installable_plugins(
+    plugin_formats: Vec<String>,
+) -> Result<HashMap<String, serde_json::Value>, Error> {
     // TODO make new api to checks what plugins are available
     let mut data: HashMap<String, serde_json::Value> = HashMap::new();
 
-    let mut mod_audio: HashMap<String, Vec<String>> = HashMap::new();
+    if plugin_formats.contains(&"VST3".to_string()) {
+        // Adding the "VST3" entry
+        let vst3 = vec!["dm-Stutter".to_string(), "dm-Whammy".to_string()];
+        data.insert("VST3".to_string(), json!(vst3));
+    }
+    if plugin_formats.contains(&"CLAP".to_string()) {
+        // Adding the "CLAP" entry
+        let clap = vec!["dm-Stutter".to_string(), "dm-Whammy".to_string()];
+        data.insert("CLAP".to_string(), json!(clap));
+    }
+    if plugin_formats.contains(&"MOD Audio".to_string()) {
+        let mut mod_audio: HashMap<String, Vec<String>> = HashMap::new();
+        let result = mod_plugin_controller::establish_connection().await;
+        match result {
+            Err(mod_plugin_controller::Error::Ssh(SshError::NoConnection)) => {
+                data.insert("modIsConnected".to_string(), json!(false));
+                Ok(())
+            }
+            _ => {
+                data.insert("modIsConnected".to_string(), json!(true));
+                result
+            }
+        }?;
+        mod_audio.insert(
+            "Dwarf".to_string(),
+            vec!["dm-LFO".to_string(), "dm-Stutter".to_string()],
+        );
+        mod_audio.insert("Duo".to_string(), vec!["dm-LFO".to_string()]);
 
-    let result = mod_plugin_controller::establish_connection().await;
-    match result {
-        Err(mod_plugin_controller::Error::Ssh(SshError::NoConnection)) => {
-            data.insert("modIsConnected".to_string(), json!(false));
-            Ok(())
-        }
-        _ => {
-            data.insert("modIsConnected".to_string(), json!(true));
-            result
-        }
-    }?;
-    mod_audio.insert(
-        "Dwarf".to_string(),
-        vec!["dm-LFO".to_string(), "dm-Stutter".to_string()],
-    );
-    mod_audio.insert("Duo".to_string(), vec!["dm-LFO".to_string()]);
-
-    // Adding the "MOD Audio" entry
-    data.insert("MOD Audio".to_string(), json!(mod_audio));
-
-    // Adding the "VST3" entry
-    let vst3 = vec!["dm-Stutter".to_string(), "dm-Whammy".to_string()];
-    data.insert("VST3".to_string(), json!(vst3));
-
-    // Adding the "CLAP" entry
-    let clap = vec!["dm-Stutter".to_string(), "dm-Whammy".to_string()];
-    data.insert("CLAP".to_string(), json!(clap));
+        // Adding the "MOD Audio" entry
+        data.insert("MOD Audio".to_string(), json!(mod_audio));
+    }
 
     Ok(data)
 }
 
 #[tauri::command]
 pub async fn get_installed_plugins(
+    plugin_formats: Vec<String>,
     vst3_folder: Option<String>,
     clap_folder: Option<String>,
 ) -> Result<HashMap<String, serde_json::Value>, Error> {
     let mut installed_plugins: HashMap<String, serde_json::Value> = HashMap::new();
-    let installable_plugins = get_installable_plugins().await?;
+    let installable_plugins = get_installable_plugins(plugin_formats.clone()).await?;
 
-    if let Some(vst3_value) = installable_plugins.get("VST3") {
-        if let Value::Array(plugins) = vst3_value {
-            if !plugins.is_empty() {
-                let plugin_folder = if let Some(vst3_folder) = vst3_folder {
-                    PathBuf::from(vst3_folder)
-                } else {
-                    get_plugin_folder("VST3")?
-                };
+    if plugin_formats.contains(&"VST3".to_string()) {
+        if let Some(vst3_value) = installable_plugins.get("VST3") {
+            if let Value::Array(plugins) = vst3_value {
+                if !plugins.is_empty() {
+                    let plugin_folder = if let Some(vst3_folder) = vst3_folder {
+                        PathBuf::from(vst3_folder)
+                    } else {
+                        get_plugin_folder("VST3")?
+                    };
 
-                let found_plugins: Vec<Value> = plugins
-                    .iter()
-                    .filter(|plugin| {
-                        if let Some(plugin_name) = plugin.as_str() {
-                            plugin_exists(&plugin_folder, plugin_name, "VST3").unwrap_or(false)
-                        } else {
-                            false
-                        }
-                    })
-                    .map(|item| item.to_owned())
-                    .collect();
+                    let found_plugins: Vec<Value> = plugins
+                        .iter()
+                        .filter(|plugin| {
+                            if let Some(plugin_name) = plugin.as_str() {
+                                plugin_exists(&plugin_folder, plugin_name, "VST3").unwrap_or(false)
+                            } else {
+                                false
+                            }
+                        })
+                        .map(|item| item.to_owned())
+                        .collect();
 
-                installed_plugins.insert("VST3".to_string(), Value::Array(found_plugins));
+                    installed_plugins.insert("VST3".to_string(), Value::Array(found_plugins));
+                }
             }
         }
     }
 
-    if let Some(clap_value) = installable_plugins.get("CLAP") {
-        if let Value::Array(plugins) = clap_value {
-            if !plugins.is_empty() {
-                let plugin_folder = if let Some(clap_folder) = clap_folder {
-                    PathBuf::from(clap_folder)
-                } else {
-                    get_plugin_folder("CLAP")?
-                };
+    if plugin_formats.contains(&"CLAP".to_string()) {
+        if let Some(clap_value) = installable_plugins.get("CLAP") {
+            if let Value::Array(plugins) = clap_value {
+                if !plugins.is_empty() {
+                    let plugin_folder = if let Some(clap_folder) = clap_folder {
+                        PathBuf::from(clap_folder)
+                    } else {
+                        get_plugin_folder("CLAP")?
+                    };
 
-                let found_plugins: Vec<Value> = plugins
-                    .iter()
-                    .filter(|plugin| {
-                        if let Some(plugin_name) = plugin.as_str() {
-                            plugin_exists(&plugin_folder, plugin_name, "CLAP").unwrap_or(false)
-                        } else {
-                            false
-                        }
-                    })
-                    .map(|item| item.to_owned())
-                    .collect();
+                    let found_plugins: Vec<Value> = plugins
+                        .iter()
+                        .filter(|plugin| {
+                            if let Some(plugin_name) = plugin.as_str() {
+                                plugin_exists(&plugin_folder, plugin_name, "CLAP").unwrap_or(false)
+                            } else {
+                                false
+                            }
+                        })
+                        .map(|item| item.to_owned())
+                        .collect();
 
-                installed_plugins.insert("CLAP".to_string(), Value::Array(found_plugins));
+                    installed_plugins.insert("CLAP".to_string(), Value::Array(found_plugins));
+                }
             }
         }
     }
 
-    if let Some(mod_value) = installable_plugins.get("MOD Audio") {
-        if let Value::Object(mod_map) = mod_value {
-            for (platform, value) in mod_map {
-                if let Value::Array(plugins) = value {
-                    installed_plugins.insert("MOD Audio".to_string(), Value::Object(Map::new()));
-
-                    if !plugins.is_empty() {
-                        let result = mod_plugin_controller::get_mod_plugins().await;
-                        let all_plugins = match result {
-                            Err(mod_plugin_controller::Error::Ssh(SshError::NoConnection)) => {
-                                installed_plugins
-                                    .insert("modIsConnected".to_string(), json!(false));
-                                return Ok(installed_plugins);
-                            }
-                            _ => {
-                                installed_plugins.insert("modIsConnected".to_string(), json!(true));
-                                result
-                            }
-                        }?;
-
-                        let found_plugins: Vec<Value> = plugins
-                            .iter()
-                            .filter(|plugin| {
-                                if let Some(plugin_name) = plugin.as_str() {
-                                    match get_plugin_bundle_name(plugin_name, "MOD Audio") {
-                                        Ok(bundle_name) => all_plugins.contains(&bundle_name),
-                                        Err(_) => false,
-                                    }
-                                } else {
-                                    false
-                                }
-                            })
-                            .map(|item| item.to_owned())
-                            .collect();
-
-                        let mut installable_mod_map = Map::new();
-                        installable_mod_map
-                            .insert(platform.to_string(), Value::Array(found_plugins));
+    if plugin_formats.contains(&"MOD Audio".to_string()) {
+        if let Some(mod_value) = installable_plugins.get("MOD Audio") {
+            if let Value::Object(mod_map) = mod_value {
+                for (platform, value) in mod_map {
+                    if let Value::Array(plugins) = value {
                         installed_plugins
-                            .insert("MOD Audio".to_string(), Value::Object(installable_mod_map));
+                            .insert("MOD Audio".to_string(), Value::Object(Map::new()));
+
+                        if !plugins.is_empty() {
+                            let result = mod_plugin_controller::get_mod_plugins().await;
+                            let all_plugins = match result {
+                                Err(mod_plugin_controller::Error::Ssh(SshError::NoConnection)) => {
+                                    installed_plugins
+                                        .insert("modIsConnected".to_string(), json!(false));
+                                    return Ok(installed_plugins);
+                                }
+                                _ => {
+                                    installed_plugins
+                                        .insert("modIsConnected".to_string(), json!(true));
+                                    result
+                                }
+                            }?;
+
+                            let found_plugins: Vec<Value> = plugins
+                                .iter()
+                                .filter(|plugin| {
+                                    if let Some(plugin_name) = plugin.as_str() {
+                                        match get_plugin_bundle_name(plugin_name, "MOD Audio") {
+                                            Ok(bundle_name) => all_plugins.contains(&bundle_name),
+                                            Err(_) => false,
+                                        }
+                                    } else {
+                                        false
+                                    }
+                                })
+                                .map(|item| item.to_owned())
+                                .collect();
+
+                            let mut installable_mod_map = Map::new();
+                            installable_mod_map
+                                .insert(platform.to_string(), Value::Array(found_plugins));
+                            installed_plugins.insert(
+                                "MOD Audio".to_string(),
+                                Value::Object(installable_mod_map),
+                            );
+                        }
                     }
                 }
             }
@@ -372,8 +388,7 @@ pub async fn delete_plugins(
                                     "Started uninstalling MOD {} plugin: {}",
                                     platform, plugin_name
                                 );
-                                mod_plugin_controller::delete_mod_plugin(bundle_name)
-                                    .await?;
+                                mod_plugin_controller::delete_mod_plugin(bundle_name).await?;
                                 println!(
                                     "Finished uninstalling MOD {} plugin: {}",
                                     platform, plugin_name

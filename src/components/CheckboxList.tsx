@@ -21,7 +21,7 @@ export function CheckboxList<T extends string>({
   selectedItems,
   kind = "default",
   onChange,
-  overrideCheckAllComponent,
+  checkAllComponent,
   emptyComponent,
   disabled,
   className,
@@ -30,16 +30,16 @@ export function CheckboxList<T extends string>({
 }: {
   title: string;
   items: T[];
-  selectedItems: T[];
+  selectedItems?: T[];
   kind?: Kind;
   onChange: (selectedItems: T[]) => void;
-  emptyComponent?: ReactNode;
-  overrideCheckAllComponent?: (props: {
+  checkAllComponent?: (props: {
     ref: RefObject<HTMLInputElement>;
     onChange: (event: ChangeEvent<HTMLInputElement>) => void;
     disabled?: boolean;
     items: T[];
   }) => ReactNode;
+  emptyComponent?: ReactNode;
   disabled?: boolean;
   className?: string;
   checkAllClassName?: string;
@@ -59,15 +59,15 @@ export function CheckboxList<T extends string>({
     const { value, checked } = event.target;
 
     if (checked) {
-      onChange([...selectedItems, value as T]);
+      onChange([...(selectedItems ?? []), value as T]);
     } else {
-      onChange(selectedItems.filter((item) => item != value));
+      onChange((selectedItems ?? []).filter((item) => item != value));
     }
   }
 
   useEffect(() => {
     function predicate(item: T) {
-      return selectedItems.includes(item);
+      return selectedItems?.includes(item);
     }
 
     if (ref.current) {
@@ -78,8 +78,8 @@ export function CheckboxList<T extends string>({
 
   return (
     <div className={`flex flex-col ${style[kind]} ${className ?? ""}`.trim()}>
-      {overrideCheckAllComponent ? (
-        overrideCheckAllComponent({
+      {checkAllComponent ? (
+        checkAllComponent({
           ref,
           onChange: onCheckAll,
           disabled,
@@ -103,7 +103,7 @@ export function CheckboxList<T extends string>({
           name={title}
           value={item}
           onChange={onCheckboxChange}
-          checked={selectedItems.includes(item)}
+          checked={selectedItems?.includes(item)}
           disabled={disabled}
           className={`${checkboxStyle[kind]} ${checkboxClassName}`.trim()}
         />

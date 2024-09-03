@@ -1,7 +1,7 @@
 import { Toast as ToastType } from "@/contexts/ToastContextProvider/toastReducer";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faClose } from "@fortawesome/free-solid-svg-icons";
-import { useToast } from "@/hooks/useToast";
+import { useToastContext } from "@/hooks/useToastContext";
 
 const heading: Record<ToastType["type"], string> = {
   success: "Success",
@@ -15,7 +15,7 @@ const colors: Record<ToastType["type"], string> = {
 };
 
 export function Toast({ id, message, type }: ToastType) {
-  const toast = useToast();
+  const toast = useToastContext();
 
   function onDismiss() {
     toast?.remove(id);

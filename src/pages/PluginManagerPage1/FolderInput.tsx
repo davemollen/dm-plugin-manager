@@ -1,5 +1,4 @@
 import { open } from "@tauri-apps/plugin-dialog";
-import { info } from "@tauri-apps/plugin-log";
 import { DetailedHTMLProps, InputHTMLAttributes } from "react";
 
 interface FolderInputProps
@@ -36,7 +35,7 @@ export function FolderInput({
     <div
       role="button"
       aria-label="folder picker"
-      className={`group flex cursor-pointer items-center self-start overflow-hidden rounded-lg border border-gray-300 bg-gray-50 font-sans text-xs dark:border-gray-500 dark:bg-gray-500 ${className ?? ""}`.trim()}
+      className={`group flex cursor-pointer items-center self-start overflow-hidden rounded-lg border border-gray-300 bg-gray-50 font-sans text-sm dark:border-gray-500 dark:bg-gray-500 ${className ?? ""}`.trim()}
       onClick={onClick}
     >
       <p className="bg-gray-200 py-1 pl-2 pr-1 font-semibold group-hover:bg-gray-400 dark:bg-gray-700 dark:group-hover:bg-gray-600">

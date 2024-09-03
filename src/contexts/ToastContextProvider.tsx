@@ -10,7 +10,7 @@ export const ToastContext = createContext<{
   remove: (id: string) => void;
 } | null>(null);
 
-export const ToastContextProvider = ({ children }: { children: ReactNode }) => {
+export function ToastContextProvider({ children }: { children: ReactNode }) {
   const timerRef = useRef<Record<string, NodeJS.Timeout>>({});
   const [state, dispatch] = useReducer(toastReducer, {
     toasts: [],
@@ -55,4 +55,4 @@ export const ToastContextProvider = ({ children }: { children: ReactNode }) => {
       {children}
     </ToastContext.Provider>
   );
-};
+}
