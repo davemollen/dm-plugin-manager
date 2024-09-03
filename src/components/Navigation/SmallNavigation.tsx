@@ -38,9 +38,12 @@ export function SmallNavigation({
         <NavLink
           to="/"
           onClick={closeSmallMenu}
-          className={({ isActive }) =>
-            `relative px-6 py-3 hover:text-link ${isActive ? "bg-onBackground text-link before:absolute before:bottom-0 before:left-0 before:top-0 before:w-1 before:bg-blue-400" : ""}`
-          }
+          className={() => {
+            const isActive =
+              location.pathname === "/" ||
+              location.pathname === "/plugin-manager-page-2";
+            return `relative px-6 py-3 hover:text-link ${isActive ? "bg-onBackground text-link before:absolute before:bottom-0 before:left-0 before:top-0 before:w-1 before:bg-blue-400" : ""}`;
+          }}
         >
           Plugin manager
         </NavLink>
