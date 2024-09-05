@@ -1,0 +1,83 @@
+{
+    "VST3": [
+        "dm-DS1",
+        "dm-Fuzz",
+        "dm-Rat",
+        "dm-Repeat",
+        "dm-Reverb",
+        "dm-SD1",
+        "dm-Shredmaster",
+        "dm-SpaceEcho",
+        "dm-Stutter",
+        "dm-TubeScreamer",
+        "dm-Vibrato",
+        "dm-Whammy"
+    ],
+    "CLAP": [
+        "dm-DS1",
+        "dm-Fuzz",
+        "dm-Rat",
+        "dm-Repeat",
+        "dm-Reverb",
+        "dm-SD1",
+        "dm-Shredmaster",
+        "dm-SpaceEcho",
+        "dm-Stutter",
+        "dm-TubeScreamer",
+        "dm-Vibrato",
+        "dm-Whammy"
+    ],
+    "MOD Audio": {
+        "Duo": [
+            "dm-DS1",
+            "dm-Fuzz",
+            "dm-GrainDelay",
+            "dm-LFO",
+            "dm-Rat",
+            "dm-Repeat",
+            "dm-Reverse",
+            "dm-Reverb",
+            "dm-SD1",
+            "dm-Shredmaster",
+            "dm-SpaceEcho",
+            "dm-Stutter",
+            "dm-TubeScreamer",
+            "dm-Vibrato",
+            "dm-Whammy"
+        ],
+        "Duo X": [
+            "dm-DS1",
+            "dm-Fuzz",
+            "dm-GrainDelay",
+            "dm-LFO",
+            "dm-Rat",
+            "dm-Repeat",
+            "dm-Reverse",
+            "dm-Reverb",
+            "dm-SD1",
+            "dm-Shredmaster",
+            "dm-SpaceEcho",
+            "dm-Stutter",
+            "dm-TubeScreamer",
+            "dm-Vibrato",
+            "dm-Whammy"
+        ],
+        "Dwarf": [
+            "dm-DS1",
+            "dm-Fuzz",
+            "dm-GrainDelay",
+            "dm-LFO",
+            "dm-Rat",
+            "dm-Repeat",
+            "dm-Reverse",
+            "dm-Reverb",
+            "dm-SD1",
+            "dm-Shredmaster",
+            "dm-SpaceEcho",
+            "dm-Stutter",
+            "dm-TubeScreamer",
+            "dm-Vibrato",
+            "dm-Whammy"
+        ]
+    }
+}

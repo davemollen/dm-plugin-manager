@@ -17,7 +17,7 @@ use delete_plugins_service::{delete_mod_plugins, delete_vst_or_clap_plugins};
 use get_plugins_service::{get_installed_mod_plugins, get_installed_vst_or_clap_plugins};
 use plugin_format::PluginFormat;
 use serde_json::json;
-use std::collections::HashMap;
+use std::{collections::HashMap, fs::File};
 use thiserror::Error;
 
 use crate::mod_plugin_controller::{self, ssh_service::SshError};
@@ -44,6 +44,9 @@ pub enum Error {
 
     #[error("Unknown operating system")]
     NoDownloadFile,
+
+    #[error("{0}")]
+    SerializationError(#[from] serde_json::Error),
 }
 
 impl serde::Serialize for Error {
@@ -59,21 +62,16 @@ impl serde::Serialize for Error {
 pub async fn get_installable_plugins(
     plugin_formats: Vec<String>,
 ) -> Result<HashMap<String, serde_json::Value>, Error> {
-    // TODO make new api to checks what plugins are available
-    let mut data: HashMap<String, serde_json::Value> = HashMap::new();
+    let file = File::open("dm-plugins.json")?;
+    let mut data: HashMap<String, serde_json::Value> = serde_json::from_reader(file)?;
 
-    if plugin_formats.contains(&"VST3".to_string()) {
-        // Adding the "VST3" entry
-        let vst3 = vec!["dm-Stutter".to_string(), "dm-Whammy".to_string()];
-        data.insert("VST3".to_string(), json!(vst3));
-    }
-    if plugin_formats.contains(&"CLAP".to_string()) {
-        // Adding the "CLAP" entry
-        let clap = vec!["dm-Stutter".to_string(), "dm-Whammy".to_string()];
-        data.insert("CLAP".to_string(), json!(clap));
-    }
-    if plugin_formats.contains(&"MOD Audio".to_string()) {
-        let mut mod_audio: HashMap<String, Vec<String>> = HashMap::new();
+    data.clone().into_keys().for_each(|key| {
+        if !plugin_formats.contains(&key) {
+            data.remove(&key);
+        }
+    });
+
+    if plugin_formats.contains(&PluginFormat::ModAudio.to_string()) {
         let result = mod_plugin_controller::establish_connection().await;
         match result {
             Err(SshError::NoConnection) => {
@@ -85,14 +83,6 @@ pub async fn get_installable_plugins(
                 result
             }
         }?;
-        mod_audio.insert(
-            "Dwarf".to_string(),
-            vec!["dm-LFO".to_string(), "dm-Stutter".to_string()],
-        );
-        mod_audio.insert("Duo".to_string(), vec!["dm-LFO".to_string()]);
-
-        // Adding the "MOD Audio" entry
-        data.insert("MOD Audio".to_string(), json!(mod_audio));
     }
 
     Ok(data)
