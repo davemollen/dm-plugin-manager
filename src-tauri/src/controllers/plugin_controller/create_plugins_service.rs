@@ -55,37 +55,33 @@ pub async fn create_vst_or_clap_plugins(
     Ok(())
 }
 
-pub async fn create_mod_plugins(plugins: &HashMap<String, serde_json::Value>) -> Result<(), Error> {
+pub async fn create_mod_plugins(
+    plugins: &HashMap<String, serde_json::Value>,
+    platform: &String,
+) -> Result<(), Error> {
     let plugin_format_key = PluginFormat::ModAudio.to_string();
-    let mod_value = match plugins.get(&plugin_format_key) {
+    let plugins = match plugins.get(&plugin_format_key) {
         Some(value) => value,
         None => return Ok(()),
     };
-    let mod_map = match mod_value {
-        Value::Object(map) => map,
+    let plugins = match plugins {
+        Value::Array(value) => value,
         _ => return Ok(()),
     };
-
-    for (platform, value) in mod_map {
-        let plugins = match value {
-            Value::Array(plugins) => plugins,
-            _ => continue,
-        };
-        if plugins.is_empty() {
-            continue;
-        }
-
-        let futures: Vec<_> = plugins
-            .iter()
-            .map(|plugin| async move {
-                let plugin_name = plugin.as_str().unwrap();
-                create_mod_plugin(plugin_name, platform).await?;
-                Ok::<(), Error>(())
-            })
-            .collect();
-
-        try_join_all(futures).await?;
+    if plugins.is_empty() {
+        return Ok(());
     }
+
+    let futures: Vec<_> = plugins
+        .iter()
+        .map(|plugin| async move {
+            let plugin_name = plugin.as_str().unwrap();
+            create_mod_plugin(plugin_name, platform).await?;
+            Ok::<(), Error>(())
+        })
+        .collect();
+
+    try_join_all(futures).await?;
 
     Ok(())
 }

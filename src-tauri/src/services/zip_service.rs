@@ -1,9 +1,8 @@
+use crate::mod_plugin_controller;
 use std::fs::{self, File};
 use std::io::{self, Read};
 use std::path::PathBuf;
 use tar::Archive;
-
-use crate::mod_plugin_controller;
 
 pub struct ZipService;
 

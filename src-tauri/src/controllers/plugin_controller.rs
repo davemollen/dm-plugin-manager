@@ -138,10 +138,13 @@ pub async fn create_plugins(
     plugins: HashMap<String, serde_json::Value>,
     vst3_folder: Option<String>,
     clap_folder: Option<String>,
+    mod_platform: Option<String>,
 ) -> Result<(), Error> {
     create_vst_or_clap_plugins(&plugins, PluginFormat::VST3, vst3_folder).await?;
     create_vst_or_clap_plugins(&plugins, PluginFormat::CLAP, clap_folder).await?;
-    create_mod_plugins(&plugins).await?;
+    if let Some(platform) = mod_platform {
+        create_mod_plugins(&plugins, &platform).await?;
+    }
 
     Ok(())
 }

@@ -6,7 +6,7 @@ export type PluginFolders = {
   clapFolder?: string;
 };
 
-export type Plugins = {
+type Plugins = {
   [K in PluginFormat]: K extends "MOD Audio"
     ? Record<ModPlatform, string[]> | undefined
     : string[] | undefined;
@@ -15,3 +15,5 @@ export type Plugins = {
 export type FetchPluginsResponse = Plugins & {
     modIsConnected?: boolean;
 }
+
+export type SelectedPlugins = Record<PluginFormat, string[] | undefined>

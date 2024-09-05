@@ -10,7 +10,11 @@ import { error } from "@tauri-apps/plugin-log";
 import { Skeleton } from "./PluginManagerPage2/Skeleton";
 import { usePluginContext } from "@/hooks/usePluginContext";
 import { useNavigate } from "react-router-dom";
-import { FetchPluginsResponse, ModPlatform, Plugins } from "@/models/plugins";
+import {
+  FetchPluginsResponse,
+  ModPlatform,
+  SelectedPlugins,
+} from "@/models/plugins";
 
 const initialModPlugins = {
   Duo: [],
@@ -27,22 +31,22 @@ const initialPlugins: FetchPluginsResponse = {
 export function PluginManagerPage2() {
   const { mode, selectedPluginFormats, pluginFolders } = usePluginContext();
   const [plugins, setPlugins] = useState<FetchPluginsResponse>(initialPlugins);
-  const [selectedPlugins, setSelectedPlugins] =
-    useState<Plugins>(initialPlugins);
-  const [isFetching, setIsFetching] = useState<boolean>(false);
-  const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [selectedModPlatform, setSelectedModPlatform] =
     useState<ModPlatform>("Dwarf");
+  const [selectedPlugins, setSelectedPlugins] = useState<SelectedPlugins>({
+    ...initialPlugins,
+    "MOD Audio": initialPlugins["MOD Audio"]?.[selectedModPlatform],
+  });
+  const [isFetching, setIsFetching] = useState<boolean>(false);
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const toast = useToastContext();
   const navigate = useNavigate();
 
-  const hasModPlugins = Object.values(plugins["MOD Audio"] ?? []).some(
-    (x) => x.length > 0,
-  );
+  const hasModPlugins = selectedPlugins["MOD Audio"]?.length;
   const noPluginsSelected =
     !selectedPlugins["VST3"]?.length &&
     !selectedPlugins["CLAP"]?.length &&
-    !selectedPlugins["MOD Audio"]?.[selectedModPlatform].length;
+    !hasModPlugins;
 
   async function fetchPlugins() {
     try {
@@ -61,8 +65,8 @@ export function PluginManagerPage2() {
       setSelectedPlugins({
         ...plugins,
         "MOD Audio": plugins.modIsConnected
-          ? selectModAudioPlugins(plugins, selectedModPlatform)
-          : initialPlugins["MOD Audio"],
+          ? plugins["MOD Audio"]?.[selectedModPlatform]
+          : undefined,
       });
     } catch (e) {
       setPlugins(initialPlugins);
@@ -78,6 +82,7 @@ export function PluginManagerPage2() {
       setIsProcessing(true);
       await invoke("create_plugins", {
         plugins: selectedPlugins,
+        modPlatform: selectedModPlatform,
         ...pluginFolders,
       });
       toast?.success("Finished installing plugins");
@@ -98,20 +103,6 @@ export function PluginManagerPage2() {
     } catch (e) {
       toast?.error(e as string);
     }
-  }
-
-  function selectModAudioPlugins(plugins: Plugins, modPlatform: ModPlatform) {
-    return Object.entries(plugins["MOD Audio"] ?? []).reduce<
-      NonNullable<Plugins["MOD Audio"]>
-    >((result, [key, value]) => {
-      if (key === modPlatform) {
-        result[key] = value;
-      } else {
-        result[key as ModPlatform] = [];
-      }
-
-      return result;
-    }, initialModPlugins);
   }
 
   function goBack() {
@@ -180,15 +171,12 @@ export function PluginManagerPage2() {
                 ? (plugins["MOD Audio"][selectedModPlatform] ?? [])
                 : []
             }
-            selectedItems={selectedPlugins["MOD Audio"]?.[selectedModPlatform]}
+            selectedItems={selectedPlugins["MOD Audio"]}
             disabled={isProcessing || !plugins.modIsConnected || !hasModPlugins}
             onChange={(items) => {
               setSelectedPlugins({
                 ...selectedPlugins,
-                "MOD Audio": {
-                  ...(selectedPlugins["MOD Audio"] ?? initialModPlugins),
-                  [selectedModPlatform]: items,
-                },
+                "MOD Audio": items,
               });
             }}
             kind="bordered"
@@ -215,7 +203,7 @@ export function PluginManagerPage2() {
                       setSelectedModPlatform(item);
                       setSelectedPlugins({
                         ...selectedPlugins,
-                        ["MOD Audio"]: selectModAudioPlugins(plugins, item),
+                        ["MOD Audio"]: plugins["MOD Audio"]?.[item],
                       });
                     }}
                     kind="bordered"
