@@ -1,8 +1,13 @@
+#[path = "./mod_plugin_controller/mod_plugin_service.rs"]
+mod mod_plugin_service;
 #[path = "../services/ssh_service.rs"]
 pub mod ssh_service;
+use mod_plugin_service::{
+    convert_to_path_object, derive_destination_folder_path, extract_root_folder_name,
+};
 use serde::Deserialize;
 pub use ssh_service::{SshError, SshService};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use thiserror::Error;
 
 #[derive(Deserialize, Debug, Clone)]
@@ -84,32 +89,8 @@ pub async fn delete_mod_plugin(name: String) -> Result<(), Error> {
     Ok(())
 }
 
-pub async fn establish_connection() -> Result<(), Error> {
+pub async fn establish_connection() -> Result<(), SshError> {
     SshService::connect("192.168.51.1", "root", "mod").await?;
+
     Ok(())
-}
-
-fn convert_to_path_object(path: String) -> PathBuf {
-    Path::new(if path.starts_with("/") {
-        &path[1..]
-    } else {
-        &path
-    })
-    .to_path_buf()
-}
-
-fn derive_destination_folder_path(destination_path: &Path) -> String {
-    destination_path
-        .ancestors()
-        .nth(1)
-        .unwrap()
-        .to_str()
-        .unwrap()
-        .to_string()
-}
-
-fn extract_root_folder_name(path: &Path) -> String {
-    let mut ancestors = path.ancestors();
-    let root = ancestors.nth(ancestors.count() - 2).unwrap();
-    root.file_name().unwrap().to_str().unwrap().to_string()
 }
