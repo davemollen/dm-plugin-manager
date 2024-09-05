@@ -12,7 +12,7 @@ mod plugin_format;
 pub mod utils;
 #[path = "../services/zip_service.rs"]
 mod zip_service;
-use create_plugins_service::{create_mod_plugin, create_plugin};
+use create_plugins_service::{create_mod_plugins, create_vst_or_clap_plugins};
 use delete_plugins_service::delete_plugin;
 use futures::future::try_join_all;
 use get_plugins_service::{get_installed_mod_plugins, get_installed_vst_or_clap_plugins};
@@ -46,9 +46,6 @@ pub enum Error {
 
     #[error("Unknown operating system")]
     NoDownloadFile,
-
-    #[error("Unknown plugin format")]
-    NoPluginFormat,
 }
 
 impl serde::Serialize for Error {
@@ -144,93 +141,9 @@ pub async fn create_plugins(
     vst3_folder: Option<String>,
     clap_folder: Option<String>,
 ) -> Result<(), Error> {
-    if let Some(vst3_value) = plugins.get("VST3") {
-        if let Value::Array(plugins) = vst3_value {
-            if !plugins.is_empty() {
-                let plugin_folder = if let Some(vst3_folder) = vst3_folder {
-                    PathBuf::from(vst3_folder)
-                } else {
-                    get_plugin_folder(&PluginFormat::VST3)?
-                };
-
-                let futures: Vec<_> = plugins
-                    .iter()
-                    .map(|plugin| {
-                        let plugin_folder = plugin_folder.clone();
-                        async move {
-                            let plugin_name = plugin.as_str().unwrap();
-                            println!("Started installing VST3 plugin: {}", plugin_name);
-                            create_plugin(&plugin_folder, plugin_name, PluginFormat::VST3).await?;
-                            println!("Finished installing VST3 plugin: {}", plugin_name);
-
-                            Ok::<(), Error>(())
-                        }
-                    })
-                    .collect();
-
-                try_join_all(futures).await?;
-            }
-        }
-    }
-
-    if let Some(clap_value) = plugins.get("CLAP") {
-        if let Value::Array(plugins) = clap_value {
-            if !plugins.is_empty() {
-                let plugin_folder = if let Some(clap_folder) = clap_folder {
-                    PathBuf::from(clap_folder)
-                } else {
-                    get_plugin_folder(&PluginFormat::CLAP)?
-                };
-
-                let futures: Vec<_> = plugins
-                    .iter()
-                    .map(|plugin| {
-                        let plugin_folder = plugin_folder.clone();
-                        async move {
-                            let plugin_name = plugin.as_str().unwrap();
-                            println!("Started installing CLAP plugin: {}", plugin_name);
-                            create_plugin(&plugin_folder, plugin_name, PluginFormat::CLAP).await?;
-                            println!("Finished installing CLAP plugin: {}", plugin_name);
-
-                            Ok::<(), Error>(())
-                        }
-                    })
-                    .collect();
-
-                try_join_all(futures).await?;
-            }
-        }
-    }
-
-    if let Some(mod_value) = plugins.get("MOD Audio") {
-        if let Value::Object(mod_map) = mod_value {
-            for (platform, value) in mod_map {
-                if let Value::Array(plugins) = value {
-                    if !plugins.is_empty() {
-                        let futures: Vec<_> = plugins
-                            .iter()
-                            .map(|plugin| async move {
-                                let plugin_name = plugin.as_str().unwrap();
-                                println!(
-                                    "Started installing MOD {} plugin: {}",
-                                    platform, plugin_name
-                                );
-                                create_mod_plugin(plugin_name, platform).await?;
-                                println!(
-                                    "Finished installing MOD {} plugin: {}",
-                                    platform, plugin_name
-                                );
-
-                                Ok::<(), Error>(())
-                            })
-                            .collect();
-
-                        try_join_all(futures).await?;
-                    }
-                }
-            }
-        }
-    }
+    create_vst_or_clap_plugins(&plugins, PluginFormat::VST3, vst3_folder).await?;
+    create_vst_or_clap_plugins(&plugins, PluginFormat::CLAP, clap_folder).await?;
+    create_mod_plugins(&plugins).await?;
 
     Ok(())
 }

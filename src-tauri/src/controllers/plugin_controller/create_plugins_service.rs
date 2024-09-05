@@ -1,15 +1,98 @@
 use super::mod_platform::ModPlatform;
 use super::plugin_format::PluginFormat;
-use super::utils::{get_plugin_bundle_name, get_plugin_path};
+use super::utils::{get_plugin_bundle_name, get_plugin_folder, get_plugin_path};
 use super::zip_service::ZipService;
 use super::Error;
 use crate::mod_plugin_controller;
+use futures::future::try_join_all;
+use serde_json::Value;
+use std::collections::HashMap;
 use std::fs::{self, File};
 use std::io;
 use std::path::{Path, PathBuf};
 use tauri::utils::platform::Target;
 
-pub async fn create_mod_plugin(plugin_name: &str, mod_platform: &String) -> Result<(), Error> {
+pub async fn create_vst_or_clap_plugins(
+    plugins: &HashMap<String, serde_json::Value>,
+    target_plugin_format: PluginFormat,
+    folder: Option<String>,
+) -> Result<(), Error> {
+    let plugin_format_key = target_plugin_format.to_string();
+    let target_plugins = match plugins.get(&plugin_format_key) {
+        Some(value) => value,
+        None => return Ok(()),
+    };
+    let target_plugins = match target_plugins {
+        Value::Array(plugins) => plugins,
+        _ => return Ok(()),
+    };
+    if target_plugins.is_empty() {
+        return Ok(());
+    }
+
+    let plugin_folder = if let Some(folder) = folder {
+        PathBuf::from(folder)
+    } else {
+        get_plugin_folder(&target_plugin_format)?
+    };
+
+    let futures: Vec<_> = target_plugins
+        .iter()
+        .map(|plugin| {
+            let plugin_folder = plugin_folder.clone();
+            let plugin_format = target_plugin_format.clone();
+
+            async move {
+                let plugin_name = plugin.as_str().unwrap();
+                create_plugin(&plugin_folder, plugin_name, plugin_format).await?;
+                Ok::<(), Error>(())
+            }
+        })
+        .collect();
+
+    try_join_all(futures).await?;
+
+    Ok(())
+}
+
+pub async fn create_mod_plugins(plugins: &HashMap<String, serde_json::Value>) -> Result<(), Error> {
+    let plugin_format_key = PluginFormat::ModAudio.to_string();
+    let mod_value = match plugins.get(&plugin_format_key) {
+        Some(value) => value,
+        None => return Ok(()),
+    };
+    let mod_map = match mod_value {
+        Value::Object(map) => map,
+        _ => return Ok(()),
+    };
+
+    for (platform, value) in mod_map {
+        let plugins = match value {
+            Value::Array(plugins) => {
+                if plugins.is_empty() {
+                    continue;
+                }
+                plugins
+            }
+            _ => continue,
+        };
+
+        let futures: Vec<_> = plugins
+            .iter()
+            .map(|plugin| async move {
+                let plugin_name = plugin.as_str().unwrap();
+                create_mod_plugin(plugin_name, platform).await?;
+                Ok::<(), Error>(())
+            })
+            .collect();
+
+        try_join_all(futures).await?;
+    }
+
+    Ok(())
+}
+
+async fn create_mod_plugin(plugin_name: &str, mod_platform: &String) -> Result<(), Error> {
     let mod_platform = map_mod_platform(mod_platform);
     let zipfile_path = download_zip_file(plugin_name, mod_platform).await?;
     let bundle_name = get_plugin_bundle_name(plugin_name, &PluginFormat::ModAudio)?;
@@ -37,7 +120,7 @@ pub async fn create_mod_plugin(plugin_name: &str, mod_platform: &String) -> Resu
     }
 }
 
-pub async fn create_plugin(
+async fn create_plugin(
     plugin_folder: &PathBuf,
     plugin_name: &str,
     plugin_format: PluginFormat,

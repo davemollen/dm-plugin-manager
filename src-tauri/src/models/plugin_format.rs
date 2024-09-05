@@ -1,5 +1,6 @@
 use std::fmt::{Display, Formatter, Result};
 
+#[derive(Clone)]
 pub enum PluginFormat {
     VST3,
     CLAP,

@@ -242,16 +242,16 @@ export function PluginManagerPage2() {
         )}
       </div>
 
-      {!noPluginsSelected && (
-        <div className="sticky bottom-4 mt-8 inline-block rounded-lg bg-background">
-          <div className="flex items-center gap-2">
-            <Button
-              disabled={selectedPluginFormats.length === 0}
-              kind="secondary"
-              onClick={goBack}
-            >
-              Go back
-            </Button>
+      <div className="sticky bottom-4 mt-8 inline-block rounded-lg bg-background">
+        <div className="flex items-center gap-2">
+          <Button
+            disabled={selectedPluginFormats.length === 0}
+            kind="secondary"
+            onClick={goBack}
+          >
+            Go back
+          </Button>
+          {!noPluginsSelected && (
             <Button
               isLoading={isProcessing}
               disabled={isProcessing}
@@ -259,9 +259,9 @@ export function PluginManagerPage2() {
             >
               {mode} plugins
             </Button>
-          </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
