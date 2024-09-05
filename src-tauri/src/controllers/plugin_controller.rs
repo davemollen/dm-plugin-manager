@@ -15,9 +15,9 @@ mod zip_service;
 use create_plugins_service::{create_mod_plugin, create_plugin};
 use delete_plugins_service::delete_plugin;
 use futures::future::try_join_all;
-use get_plugins_service::plugin_exists;
+use get_plugins_service::{get_installed_mod_plugins, get_installed_vst_or_clap_plugins};
 use plugin_format::PluginFormat;
-use serde_json::{json, Map, Value};
+use serde_json::{json, Value};
 use std::{collections::HashMap, path::PathBuf};
 use thiserror::Error;
 use utils::{get_plugin_bundle_name, get_plugin_folder};
@@ -112,118 +112,28 @@ pub async fn get_installed_plugins(
     let mut installed_plugins: HashMap<String, serde_json::Value> = HashMap::new();
     let installable_plugins = get_installable_plugins(plugin_formats.clone()).await?;
 
-    if plugin_formats.contains(&"VST3".to_string()) {
-        if let Some(vst3_value) = installable_plugins.get("VST3") {
-            if let Value::Array(plugins) = vst3_value {
-                if !plugins.is_empty() {
-                    let plugin_folder = if let Some(vst3_folder) = vst3_folder {
-                        PathBuf::from(vst3_folder)
-                    } else {
-                        get_plugin_folder(PluginFormat::VST3)?
-                    };
+    get_installed_vst_or_clap_plugins(
+        &plugin_formats,
+        PluginFormat::VST3,
+        vst3_folder,
+        &installable_plugins,
+        &mut installed_plugins,
+    )?;
 
-                    let found_plugins: Vec<Value> = plugins
-                        .iter()
-                        .filter(|plugin| {
-                            if let Some(plugin_name) = plugin.as_str() {
-                                plugin_exists(&plugin_folder, plugin_name, &PluginFormat::VST3)
-                                    .unwrap_or(false)
-                            } else {
-                                false
-                            }
-                        })
-                        .map(|item| item.to_owned())
-                        .collect();
+    get_installed_vst_or_clap_plugins(
+        &plugin_formats,
+        PluginFormat::CLAP,
+        clap_folder,
+        &installable_plugins,
+        &mut installed_plugins,
+    )?;
 
-                    installed_plugins.insert("VST3".to_string(), Value::Array(found_plugins));
-                }
-            }
-        }
-    }
-
-    if plugin_formats.contains(&"CLAP".to_string()) {
-        if let Some(clap_value) = installable_plugins.get("CLAP") {
-            if let Value::Array(plugins) = clap_value {
-                if !plugins.is_empty() {
-                    let plugin_folder = if let Some(clap_folder) = clap_folder {
-                        PathBuf::from(clap_folder)
-                    } else {
-                        get_plugin_folder(PluginFormat::CLAP)?
-                    };
-
-                    let found_plugins: Vec<Value> = plugins
-                        .iter()
-                        .filter(|plugin| {
-                            if let Some(plugin_name) = plugin.as_str() {
-                                plugin_exists(&plugin_folder, plugin_name, &PluginFormat::CLAP)
-                                    .unwrap_or(false)
-                            } else {
-                                false
-                            }
-                        })
-                        .map(|item| item.to_owned())
-                        .collect();
-
-                    installed_plugins.insert("CLAP".to_string(), Value::Array(found_plugins));
-                }
-            }
-        }
-    }
-
-    if plugin_formats.contains(&"MOD Audio".to_string()) {
-        if let Some(mod_value) = installable_plugins.get("MOD Audio") {
-            if let Value::Object(mod_map) = mod_value {
-                for (platform, value) in mod_map {
-                    if let Value::Array(plugins) = value {
-                        installed_plugins
-                            .insert("MOD Audio".to_string(), Value::Object(Map::new()));
-
-                        if !plugins.is_empty() {
-                            let result = mod_plugin_controller::get_mod_plugins().await;
-                            let all_plugins = match result {
-                                Err(mod_plugin_controller::Error::Ssh(SshError::NoConnection)) => {
-                                    installed_plugins
-                                        .insert("modIsConnected".to_string(), json!(false));
-                                    return Ok(installed_plugins);
-                                }
-                                _ => {
-                                    installed_plugins
-                                        .insert("modIsConnected".to_string(), json!(true));
-                                    result
-                                }
-                            }?;
-
-                            let found_plugins: Vec<Value> = plugins
-                                .iter()
-                                .filter(|plugin| {
-                                    if let Some(plugin_name) = plugin.as_str() {
-                                        match get_plugin_bundle_name(
-                                            plugin_name,
-                                            &PluginFormat::ModAudio,
-                                        ) {
-                                            Ok(bundle_name) => all_plugins.contains(&bundle_name),
-                                            Err(_) => false,
-                                        }
-                                    } else {
-                                        false
-                                    }
-                                })
-                                .map(|item| item.to_owned())
-                                .collect();
-
-                            let mut installable_mod_map = Map::new();
-                            installable_mod_map
-                                .insert(platform.to_string(), Value::Array(found_plugins));
-                            installed_plugins.insert(
-                                "MOD Audio".to_string(),
-                                Value::Object(installable_mod_map),
-                            );
-                        }
-                    }
-                }
-            }
-        }
-    }
+    get_installed_mod_plugins(
+        &plugin_formats,
+        &installable_plugins,
+        &mut installed_plugins,
+    )
+    .await?;
 
     Ok(installed_plugins)
 }
@@ -240,7 +150,7 @@ pub async fn create_plugins(
                 let plugin_folder = if let Some(vst3_folder) = vst3_folder {
                     PathBuf::from(vst3_folder)
                 } else {
-                    get_plugin_folder(PluginFormat::VST3)?
+                    get_plugin_folder(&PluginFormat::VST3)?
                 };
 
                 let futures: Vec<_> = plugins
@@ -269,7 +179,7 @@ pub async fn create_plugins(
                 let plugin_folder = if let Some(clap_folder) = clap_folder {
                     PathBuf::from(clap_folder)
                 } else {
-                    get_plugin_folder(PluginFormat::CLAP)?
+                    get_plugin_folder(&PluginFormat::CLAP)?
                 };
 
                 let futures: Vec<_> = plugins
@@ -337,7 +247,7 @@ pub async fn delete_plugins(
                 let plugin_folder = if let Some(vst3_folder) = vst3_folder {
                     PathBuf::from(vst3_folder)
                 } else {
-                    get_plugin_folder(PluginFormat::VST3)?
+                    get_plugin_folder(&PluginFormat::VST3)?
                 };
 
                 let futures: Vec<_> = plugins
@@ -366,7 +276,7 @@ pub async fn delete_plugins(
                 let plugin_folder = if let Some(clap_folder) = clap_folder {
                     PathBuf::from(clap_folder)
                 } else {
-                    get_plugin_folder(PluginFormat::CLAP)?
+                    get_plugin_folder(&PluginFormat::CLAP)?
                 };
 
                 let futures: Vec<_> = plugins

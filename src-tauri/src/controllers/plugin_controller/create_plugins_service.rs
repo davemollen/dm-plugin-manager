@@ -104,9 +104,8 @@ fn get_download_file_name(
             ModPlatform::Dwarf => Ok("moddwarf-new".to_string()),
             ModPlatform::Duo => Ok("modduo-new".to_string()),
             ModPlatform::DuoX => Ok("modduox-new".to_string()),
-            _ => Err(Error::NoDownloadFile),
         },
-        _ => Err(Error::NoDownloadFile),
+        (_, None) => Err(Error::NoDownloadFile),
     }?;
 
     Ok(format!("{0}-{1}.zip", plugin_name, os))
