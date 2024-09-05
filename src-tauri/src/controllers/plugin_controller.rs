@@ -13,14 +13,12 @@ pub mod utils;
 #[path = "../services/zip_service.rs"]
 mod zip_service;
 use create_plugins_service::{create_mod_plugins, create_vst_or_clap_plugins};
-use delete_plugins_service::delete_plugin;
-use futures::future::try_join_all;
+use delete_plugins_service::{delete_mod_plugins, delete_vst_or_clap_plugins};
 use get_plugins_service::{get_installed_mod_plugins, get_installed_vst_or_clap_plugins};
 use plugin_format::PluginFormat;
-use serde_json::{json, Value};
-use std::{collections::HashMap, path::PathBuf};
+use serde_json::json;
+use std::collections::HashMap;
 use thiserror::Error;
-use utils::{get_plugin_bundle_name, get_plugin_folder};
 
 use crate::mod_plugin_controller::{self, ssh_service::SshError};
 
@@ -154,95 +152,9 @@ pub async fn delete_plugins(
     vst3_folder: Option<String>,
     clap_folder: Option<String>,
 ) -> Result<(), Error> {
-    if let Some(vst3_value) = plugins.get("VST3") {
-        if let Value::Array(plugins) = vst3_value {
-            if !plugins.is_empty() {
-                let plugin_folder = if let Some(vst3_folder) = vst3_folder {
-                    PathBuf::from(vst3_folder)
-                } else {
-                    get_plugin_folder(&PluginFormat::VST3)?
-                };
-
-                let futures: Vec<_> = plugins
-                    .iter()
-                    .map(|plugin| {
-                        let plugin_folder = plugin_folder.clone();
-                        async move {
-                            let plugin_name = plugin.as_str().unwrap();
-                            println!("Started uninstalling VST3 plugin: {}", plugin_name);
-                            delete_plugin(&plugin_folder, plugin_name, &PluginFormat::VST3).await?;
-                            println!("Finished uninstalling VST3 plugin: {}", plugin_name);
-
-                            Ok::<(), Error>(())
-                        }
-                    })
-                    .collect();
-
-                try_join_all(futures).await?;
-            }
-        }
-    }
-
-    if let Some(clap_value) = plugins.get("CLAP") {
-        if let Value::Array(plugins) = clap_value {
-            if !plugins.is_empty() {
-                let plugin_folder = if let Some(clap_folder) = clap_folder {
-                    PathBuf::from(clap_folder)
-                } else {
-                    get_plugin_folder(&PluginFormat::CLAP)?
-                };
-
-                let futures: Vec<_> = plugins
-                    .iter()
-                    .map(|plugin| {
-                        let plugin_folder = plugin_folder.clone();
-                        async move {
-                            let plugin_name = plugin.as_str().unwrap();
-                            println!("Started uninstalling CLAP plugin: {}", plugin_name);
-                            delete_plugin(&plugin_folder, plugin_name, &PluginFormat::CLAP).await?;
-                            println!("Finished uninstalling CLAP plugin: {}", plugin_name);
-
-                            Ok::<(), Error>(())
-                        }
-                    })
-                    .collect();
-
-                try_join_all(futures).await?;
-            }
-        }
-    }
-
-    if let Some(mod_value) = plugins.get("MOD Audio") {
-        if let Value::Object(mod_map) = mod_value {
-            for (platform, value) in mod_map {
-                if let Value::Array(plugins) = value {
-                    if !plugins.is_empty() {
-                        let futures: Vec<_> = plugins
-                            .iter()
-                            .map(|plugin| async move {
-                                let plugin_name = plugin.as_str().unwrap();
-                                let bundle_name =
-                                    get_plugin_bundle_name(plugin_name, &PluginFormat::ModAudio)?;
-                                println!(
-                                    "Started uninstalling MOD {} plugin: {}",
-                                    platform, plugin_name
-                                );
-                                mod_plugin_controller::delete_mod_plugin(bundle_name).await?;
-                                println!(
-                                    "Finished uninstalling MOD {} plugin: {}",
-                                    platform, plugin_name
-                                );
-
-                                Ok::<(), Error>(())
-                            })
-                            .collect();
-
-                        try_join_all(futures).await?;
-                    }
-                }
-            }
-        }
-    }
+    delete_vst_or_clap_plugins(&plugins, PluginFormat::VST3, vst3_folder).await?;
+    delete_vst_or_clap_plugins(&plugins, PluginFormat::CLAP, clap_folder).await?;
+    delete_mod_plugins(&plugins).await?;
 
     Ok(())
 }

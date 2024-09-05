@@ -18,15 +18,15 @@ pub async fn create_vst_or_clap_plugins(
     folder: Option<String>,
 ) -> Result<(), Error> {
     let plugin_format_key = target_plugin_format.to_string();
-    let target_plugins = match plugins.get(&plugin_format_key) {
+    let plugins = match plugins.get(&plugin_format_key) {
         Some(value) => value,
         None => return Ok(()),
     };
-    let target_plugins = match target_plugins {
+    let plugins = match plugins {
         Value::Array(plugins) => plugins,
         _ => return Ok(()),
     };
-    if target_plugins.is_empty() {
+    if plugins.is_empty() {
         return Ok(());
     }
 
@@ -36,7 +36,7 @@ pub async fn create_vst_or_clap_plugins(
         get_plugin_folder(&target_plugin_format)?
     };
 
-    let futures: Vec<_> = target_plugins
+    let futures: Vec<_> = plugins
         .iter()
         .map(|plugin| {
             let plugin_folder = plugin_folder.clone();
@@ -68,14 +68,12 @@ pub async fn create_mod_plugins(plugins: &HashMap<String, serde_json::Value>) ->
 
     for (platform, value) in mod_map {
         let plugins = match value {
-            Value::Array(plugins) => {
-                if plugins.is_empty() {
-                    continue;
-                }
-                plugins
-            }
+            Value::Array(plugins) => plugins,
             _ => continue,
         };
+        if plugins.is_empty() {
+            continue;
+        }
 
         let futures: Vec<_> = plugins
             .iter()
