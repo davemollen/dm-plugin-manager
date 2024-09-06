@@ -18,7 +18,7 @@ import {
 
 const initialModPlugins = {
   Duo: [],
-  "Duo X": [],
+  DuoX: [],
   Dwarf: [],
 };
 const initialPlugins: FetchPluginsResponse = {
@@ -44,8 +44,8 @@ export function PluginManagerPage2() {
 
   const hasModPlugins = selectedPlugins["MOD Audio"]?.length;
   const noPluginsSelected =
-    !selectedPlugins["VST3"]?.length &&
-    !selectedPlugins["CLAP"]?.length &&
+    !selectedPlugins.VST3?.length &&
+    !selectedPlugins.CLAP?.length &&
     !hasModPlugins;
 
   async function fetchPlugins() {
@@ -60,6 +60,7 @@ export function PluginManagerPage2() {
           : await invoke<FetchPluginsResponse>("get_installed_plugins", {
               ...pluginFolders,
               pluginFormats: selectedPluginFormats,
+              modPlatform: selectedModPlatform,
             });
       setPlugins(plugins);
       setSelectedPlugins({

@@ -1,11 +1,5 @@
+import { Mode, PluginFolders, PluginFormat } from "@/models/plugins";
 import { createContext, ReactNode, useState } from "react";
-
-type Mode = "Install" | "Uninstall";
-type PluginFormat = "VST3" | "CLAP" | "MOD Audio";
-type PluginFolders = {
-  vst3Folder?: string;
-  clapFolder?: string;
-};
 
 export const PluginContext = createContext<{
   mode: Mode;

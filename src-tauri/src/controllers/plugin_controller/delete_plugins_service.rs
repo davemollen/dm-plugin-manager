@@ -5,23 +5,13 @@ use super::{
 };
 use crate::{mod_plugin_controller, plugin_controller::utils::get_plugin_bundle_name};
 use futures::future::try_join_all;
-use serde_json::Value;
-use std::{collections::HashMap, fs, path::PathBuf};
+use std::{fs, path::PathBuf};
 
 pub async fn delete_vst_or_clap_plugins(
-    plugins: &HashMap<String, serde_json::Value>,
+    plugins: Vec<String>,
     target_plugin_format: PluginFormat,
     folder: Option<String>,
 ) -> Result<(), Error> {
-    let plugin_format_key = target_plugin_format.to_string();
-    let plugins = match plugins.get(&plugin_format_key) {
-        Some(value) => value,
-        None => return Ok(()),
-    };
-    let plugins = match plugins {
-        Value::Array(plugins) => plugins,
-        _ => return Ok(()),
-    };
     if plugins.is_empty() {
         return Ok(());
     }
@@ -37,8 +27,7 @@ pub async fn delete_vst_or_clap_plugins(
         .map(|plugin| {
             let plugin_folder = plugin_folder.clone();
             async move {
-                let plugin_name = plugin.as_str().unwrap();
-                delete_plugin(&plugin_folder, plugin_name, &PluginFormat::VST3).await?;
+                delete_plugin(&plugin_folder, plugin.as_str(), &PluginFormat::VST3).await?;
                 Ok::<(), Error>(())
             }
         })
@@ -49,16 +38,7 @@ pub async fn delete_vst_or_clap_plugins(
     Ok(())
 }
 
-pub async fn delete_mod_plugins(plugins: &HashMap<String, serde_json::Value>) -> Result<(), Error> {
-    let plugin_format_key = PluginFormat::ModAudio.to_string();
-    let plugins = match plugins.get(&plugin_format_key) {
-        Some(value) => value,
-        None => return Ok(()),
-    };
-    let plugins = match plugins {
-        Value::Array(value) => value,
-        _ => return Ok(()),
-    };
+pub async fn delete_mod_plugins(plugins: Vec<String>) -> Result<(), Error> {
     if plugins.is_empty() {
         return Ok(());
     }
@@ -66,8 +46,7 @@ pub async fn delete_mod_plugins(plugins: &HashMap<String, serde_json::Value>) ->
     let futures: Vec<_> = plugins
         .iter()
         .map(|plugin| async move {
-            let plugin_name = plugin.as_str().unwrap();
-            let bundle_name = get_plugin_bundle_name(plugin_name, &PluginFormat::ModAudio)?;
+            let bundle_name = get_plugin_bundle_name(plugin.as_str(), &PluginFormat::ModAudio)?;
             mod_plugin_controller::delete_mod_plugin(bundle_name).await?;
             Ok::<(), Error>(())
         })

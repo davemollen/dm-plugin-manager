@@ -8,6 +8,8 @@ mod get_plugins_service;
 mod mod_platform;
 #[path = "../models/plugin_format.rs"]
 mod plugin_format;
+#[path = "../models/plugins.rs"]
+mod plugins;
 #[path = "./plugin_controller/utils.rs"]
 pub mod utils;
 #[path = "../services/zip_service.rs"]
@@ -15,9 +17,10 @@ mod zip_service;
 use create_plugins_service::{create_mod_plugins, create_vst_or_clap_plugins};
 use delete_plugins_service::{delete_mod_plugins, delete_vst_or_clap_plugins};
 use get_plugins_service::{get_installed_mod_plugins, get_installed_vst_or_clap_plugins};
+use mod_platform::ModPlatform;
 use plugin_format::PluginFormat;
-use serde_json::json;
-use std::{collections::HashMap, fs::File};
+use plugins::{GetPluginsResponse, PluginsConfig, SelectedPlugins};
+use std::fs::File;
 use thiserror::Error;
 
 use crate::mod_plugin_controller::{self, ssh_service::SshError};
@@ -61,31 +64,38 @@ impl serde::Serialize for Error {
 #[tauri::command]
 pub async fn get_installable_plugins(
     plugin_formats: Vec<String>,
-) -> Result<HashMap<String, serde_json::Value>, Error> {
+) -> Result<GetPluginsResponse, Error> {
     let file = File::open("dm-plugins.json")?;
-    let mut data: HashMap<String, serde_json::Value> = serde_json::from_reader(file)?;
+    let config: PluginsConfig = serde_json::from_reader(file)?;
+    let mut response = GetPluginsResponse::default();
 
-    data.clone().into_keys().for_each(|key| {
-        if !plugin_formats.contains(&key) {
-            data.remove(&key);
-        }
-    });
+    if plugin_formats.contains(&PluginFormat::VST3.to_string()) {
+        response.vst3 = config.vst3;
+    }
+
+    if plugin_formats.contains(&PluginFormat::CLAP.to_string()) {
+        response.clap = config.clap;
+    }
+
+    if plugin_formats.contains(&PluginFormat::ModAudio.to_string()) {
+        response.mod_audio = config.mod_audio;
+    }
 
     if plugin_formats.contains(&PluginFormat::ModAudio.to_string()) {
         let result = mod_plugin_controller::establish_connection().await;
         match result {
             Err(SshError::NoConnection) => {
-                data.insert("modIsConnected".to_string(), json!(false));
+                response.mod_is_connected = false;
                 Ok(())
             }
             _ => {
-                data.insert("modIsConnected".to_string(), json!(true));
+                response.mod_is_connected = true;
                 result
             }
         }?;
     }
 
-    Ok(data)
+    Ok(response)
 }
 
 #[tauri::command]
@@ -93,8 +103,9 @@ pub async fn get_installed_plugins(
     plugin_formats: Vec<String>,
     vst3_folder: Option<String>,
     clap_folder: Option<String>,
-) -> Result<HashMap<String, serde_json::Value>, Error> {
-    let mut installed_plugins: HashMap<String, serde_json::Value> = HashMap::new();
+    mod_platform: Option<ModPlatform>,
+) -> Result<GetPluginsResponse, Error> {
+    let mut installed_plugins = GetPluginsResponse::default();
     let installable_plugins = get_installable_plugins(plugin_formats.clone()).await?;
 
     get_installed_vst_or_clap_plugins(
@@ -117,6 +128,7 @@ pub async fn get_installed_plugins(
         &plugin_formats,
         &installable_plugins,
         &mut installed_plugins,
+        mod_platform,
     )
     .await?;
 
@@ -125,15 +137,15 @@ pub async fn get_installed_plugins(
 
 #[tauri::command]
 pub async fn create_plugins(
-    plugins: HashMap<String, serde_json::Value>,
+    plugins: SelectedPlugins,
     vst3_folder: Option<String>,
     clap_folder: Option<String>,
     mod_platform: Option<String>,
 ) -> Result<(), Error> {
-    create_vst_or_clap_plugins(&plugins, PluginFormat::VST3, vst3_folder).await?;
-    create_vst_or_clap_plugins(&plugins, PluginFormat::CLAP, clap_folder).await?;
+    create_vst_or_clap_plugins(plugins.vst3, PluginFormat::VST3, vst3_folder).await?;
+    create_vst_or_clap_plugins(plugins.clap, PluginFormat::CLAP, clap_folder).await?;
     if let Some(platform) = mod_platform {
-        create_mod_plugins(&plugins, &platform).await?;
+        create_mod_plugins(plugins.mod_audio, &platform).await?;
     }
 
     Ok(())
@@ -141,13 +153,13 @@ pub async fn create_plugins(
 
 #[tauri::command]
 pub async fn delete_plugins(
-    plugins: HashMap<String, serde_json::Value>,
+    plugins: SelectedPlugins,
     vst3_folder: Option<String>,
     clap_folder: Option<String>,
 ) -> Result<(), Error> {
-    delete_vst_or_clap_plugins(&plugins, PluginFormat::VST3, vst3_folder).await?;
-    delete_vst_or_clap_plugins(&plugins, PluginFormat::CLAP, clap_folder).await?;
-    delete_mod_plugins(&plugins).await?;
+    delete_vst_or_clap_plugins(plugins.vst3, PluginFormat::VST3, vst3_folder).await?;
+    delete_vst_or_clap_plugins(plugins.clap, PluginFormat::CLAP, clap_folder).await?;
+    delete_mod_plugins(plugins.mod_audio).await?;
 
     Ok(())
 }

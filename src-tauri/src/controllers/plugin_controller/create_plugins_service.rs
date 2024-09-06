@@ -5,27 +5,16 @@ use super::zip_service::ZipService;
 use super::Error;
 use crate::mod_plugin_controller;
 use futures::future::try_join_all;
-use serde_json::Value;
-use std::collections::HashMap;
 use std::fs::{self, File};
 use std::io;
 use std::path::{Path, PathBuf};
 use tauri::utils::platform::Target;
 
 pub async fn create_vst_or_clap_plugins(
-    plugins: &HashMap<String, serde_json::Value>,
+    plugins: Vec<String>,
     target_plugin_format: PluginFormat,
     folder: Option<String>,
 ) -> Result<(), Error> {
-    let plugin_format_key = target_plugin_format.to_string();
-    let plugins = match plugins.get(&plugin_format_key) {
-        Some(value) => value,
-        None => return Ok(()),
-    };
-    let plugins = match plugins {
-        Value::Array(plugins) => plugins,
-        _ => return Ok(()),
-    };
     if plugins.is_empty() {
         return Ok(());
     }
@@ -43,8 +32,7 @@ pub async fn create_vst_or_clap_plugins(
             let plugin_format = target_plugin_format.clone();
 
             async move {
-                let plugin_name = plugin.as_str().unwrap();
-                create_plugin(&plugin_folder, plugin_name, plugin_format).await?;
+                create_plugin(&plugin_folder, plugin.as_str(), plugin_format).await?;
                 Ok::<(), Error>(())
             }
         })
@@ -55,19 +43,7 @@ pub async fn create_vst_or_clap_plugins(
     Ok(())
 }
 
-pub async fn create_mod_plugins(
-    plugins: &HashMap<String, serde_json::Value>,
-    platform: &String,
-) -> Result<(), Error> {
-    let plugin_format_key = PluginFormat::ModAudio.to_string();
-    let plugins = match plugins.get(&plugin_format_key) {
-        Some(value) => value,
-        None => return Ok(()),
-    };
-    let plugins = match plugins {
-        Value::Array(value) => value,
-        _ => return Ok(()),
-    };
+pub async fn create_mod_plugins(plugins: Vec<String>, platform: &String) -> Result<(), Error> {
     if plugins.is_empty() {
         return Ok(());
     }
@@ -75,8 +51,7 @@ pub async fn create_mod_plugins(
     let futures: Vec<_> = plugins
         .iter()
         .map(|plugin| async move {
-            let plugin_name = plugin.as_str().unwrap();
-            create_mod_plugin(plugin_name, platform).await?;
+            create_mod_plugin(plugin.as_str(), platform).await?;
             Ok::<(), Error>(())
         })
         .collect();
