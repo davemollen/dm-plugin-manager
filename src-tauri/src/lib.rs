@@ -19,6 +19,9 @@ pub fn run() {
                 window.open_devtools();
                 window.close_devtools();
             }
+            app.handle()
+                .plugin(tauri_plugin_updater::Builder::new().build())?;
+
             Ok(())
         })
         .plugin(tauri_plugin_os::init())
