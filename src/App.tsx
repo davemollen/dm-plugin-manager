@@ -7,6 +7,8 @@ import { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Navigation } from "./components/Navigation";
 import { PluginContextProvider } from "./contexts/PluginContextProvider";
+import { PluginManagerSuccess } from "./pages/PluginManagerSuccess";
+import { PluginManagerError } from "./pages/PluginManagerError";
 
 function App() {
   useEffect(() => {
@@ -28,6 +30,14 @@ function App() {
                 <Route
                   path="/plugin-manager-page-2"
                   element={<PluginManagerPage2 />}
+                />
+                <Route
+                  path="/plugin-manager-success"
+                  element={<PluginManagerSuccess />}
+                />
+                <Route
+                  path="/plugin-manager-error"
+                  element={<PluginManagerError />}
                 />
                 <Route
                   path="/mod-plugin-manager"

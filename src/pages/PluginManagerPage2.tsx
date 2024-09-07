@@ -86,9 +86,10 @@ export function PluginManagerPage2() {
         modPlatform: selectedModPlatform,
         ...pluginFolders,
       });
-      toast?.success("Finished installing plugins");
+      navigate("/plugin-manager-success");
     } catch (e) {
-      toast?.error(e as string);
+      error(e as string);
+      navigate("/plugin-manager-error", { state: { error: e as string } });
     } finally {
       setIsProcessing(false);
     }
@@ -100,9 +101,10 @@ export function PluginManagerPage2() {
         plugins: selectedPlugins,
         ...pluginFolders,
       });
-      toast?.success("Finished uninstalling plugins");
+      navigate("/plugin-manager-success");
     } catch (e) {
-      toast?.error(e as string);
+      error(e as string);
+      navigate("/plugin-manager-error", { state: { error: e as string } });
     }
   }
 
