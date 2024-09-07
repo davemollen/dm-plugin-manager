@@ -13,7 +13,7 @@ export function PluginManagerError() {
     navigate(-1);
   }
 
-  function fromStartClick() {
+  function startOverClick() {
     navigate("/");
   }
 
@@ -26,16 +26,16 @@ export function PluginManagerError() {
       />
       <h2 className="w-64 font-sans text-3xl font-bold">{mode} failed</h2>
       <p className="max-w-sm text-sm">
-        Unfortunately, one or more plugins could not be{" "}
-        {mode === "Install" ? "installed" : "uninstalled"}. Because the
+        Unfortunately one or more plugins could not be{" "}
+        {mode === "Install" ? "installed" : "uninstalled"}, because the
         following error occurred: "{state.error}". Please try again by going
-        back to the previous page. Or {mode.toLowerCase()} again from the start.
+        back to the previous page. Or start over from the beginning.
       </p>
       <div className="mt-4 flex gap-2">
         <Button onClick={goBackClick} kind="secondary">
           Go back
         </Button>
-        <Button onClick={fromStartClick}>From the start</Button>
+        <Button onClick={startOverClick}>Start over</Button>
       </div>
     </div>
   );
