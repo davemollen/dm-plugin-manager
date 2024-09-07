@@ -35,7 +35,7 @@ export function PluginManagerPage2() {
     useState<ModPlatform>("Dwarf");
   const [selectedPlugins, setSelectedPlugins] = useState<SelectedPlugins>({
     ...initialPlugins,
-    "MOD Audio": initialPlugins["MOD Audio"]?.[selectedModPlatform],
+    "MOD Audio": initialPlugins["MOD Audio"][selectedModPlatform],
   });
   const [isFetching, setIsFetching] = useState<boolean>(false);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
@@ -66,8 +66,8 @@ export function PluginManagerPage2() {
       setSelectedPlugins({
         ...plugins,
         "MOD Audio": plugins.modIsConnected
-          ? plugins["MOD Audio"]?.[selectedModPlatform]
-          : undefined,
+          ? plugins["MOD Audio"][selectedModPlatform]
+          : [],
       });
     } catch (e) {
       setPlugins(initialPlugins);
@@ -122,7 +122,7 @@ export function PluginManagerPage2() {
     <div className="w-full">
       <h4 className="font-sans text-xl font-bold">Plugin selection</h4>
       <div className="mt-4 flex flex-col gap-4 lg:flex-row lg:items-start">
-        {plugins.VST3 && (
+        {selectedPluginFormats.includes("VST3") && (
           <CheckboxList
             title="VST3"
             items={plugins.VST3}
@@ -143,7 +143,7 @@ export function PluginManagerPage2() {
           />
         )}
 
-        {plugins.CLAP && (
+        {selectedPluginFormats.includes("CLAP") && (
           <CheckboxList
             title="CLAP"
             items={plugins.CLAP}
@@ -164,7 +164,7 @@ export function PluginManagerPage2() {
           />
         )}
 
-        {plugins["MOD Audio"] && (
+        {selectedPluginFormats.includes("MOD Audio") && (
           <CheckboxList
             title={selectedModPlatform}
             items={
@@ -195,9 +195,7 @@ export function PluginManagerPage2() {
                 {mode === "Install" && props.items.length > 0 && (
                   <RadioButtonList
                     groupName="MOD Audio"
-                    items={
-                      Object.keys(plugins["MOD Audio"] ?? []) as ModPlatform[]
-                    }
+                    items={Object.keys(plugins["MOD Audio"]) as ModPlatform[]}
                     selectedItem={selectedModPlatform}
                     disabled={props.disabled}
                     onChange={(item) => {
@@ -231,8 +229,8 @@ export function PluginManagerPage2() {
         )}
       </div>
 
-      <div className="sticky bottom-4 mt-8 inline-block rounded-lg bg-background">
-        <div className="flex items-center gap-2">
+      <div className="sticky bottom-4 mt-8 flex items-center gap-2">
+        <div className="rounded-lg bg-background">
           <Button
             disabled={selectedPluginFormats.length === 0}
             kind="secondary"
@@ -240,16 +238,16 @@ export function PluginManagerPage2() {
           >
             Go back
           </Button>
-          {!noPluginsSelected && (
-            <Button
-              isLoading={isProcessing}
-              disabled={isProcessing}
-              onClick={mode === "Install" ? createPlugins : deletePlugins}
-            >
-              {mode} plugins
-            </Button>
-          )}
         </div>
+        {!noPluginsSelected && (
+          <Button
+            isLoading={isProcessing}
+            disabled={isProcessing}
+            onClick={mode === "Install" ? createPlugins : deletePlugins}
+          >
+            {mode} plugins
+          </Button>
+        )}
       </div>
     </div>
   );

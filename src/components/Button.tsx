@@ -6,7 +6,7 @@ const style: Record<NonNullable<ButtonProps["kind"]>, string> = {
   primary:
     "bg-cta [&:not(:disabled)]:hover:bg-ctaHover text-white [&:not(:disabled)]:hover:shadow-cta/30",
   secondary:
-    "bg-background [&:not(:disabled)]:hover:bg-foreground/10 border-2 border-foreground shadow-foreground/10 text-foreground [&:not(:disabled)]:hover:shadow-foreground/20",
+    "bg-background [&:not(:disabled)]:hover:bg-foreground/15 border-2 border-foreground shadow-foreground/10 text-foreground [&:not(:disabled)]:hover:shadow-foreground/20",
 };
 
 export interface ButtonProps

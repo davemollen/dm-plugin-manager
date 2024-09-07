@@ -8,12 +8,12 @@ export type PluginFolders = {
 
 type Plugins = {
   [K in PluginFormat]: K extends "MOD Audio"
-    ? Record<ModPlatform, string[]> | undefined
-    : string[] | undefined;
+    ? Record<ModPlatform, string[]>
+    : string[];
 };
 
 export type FetchPluginsResponse = Plugins & {
     modIsConnected?: boolean;
 }
 
-export type SelectedPlugins = Record<PluginFormat, string[] | undefined>
+export type SelectedPlugins = Record<PluginFormat, string[]>

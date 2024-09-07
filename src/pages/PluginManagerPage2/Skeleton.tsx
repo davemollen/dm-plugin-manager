@@ -8,7 +8,7 @@ export function Skeleton() {
 
   return (
     <div className="w-full">
-      <h4 className="mt-8 font-sans text-xl font-bold">Plugin selection</h4>
+      <h4 className="font-sans text-xl font-bold">Plugin selection</h4>
       <div className="mt-4 flex flex-col gap-4 lg:flex-row lg:items-start">
         {selectedPluginFormats.includes("VST3") && (
           <CheckboxListSkeleton
