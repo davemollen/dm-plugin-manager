@@ -1,3 +1,4 @@
+import { usePersistedState } from "@/hooks/usePersistedState";
 import { Mode, PluginFolders, PluginFormat } from "@/models/plugins";
 import { createContext, ReactNode, useState } from "react";
 
@@ -22,7 +23,10 @@ export function PluginContextProvider({ children }: { children: ReactNode }) {
   const [selectedPluginFormats, setSelectedPluginFormats] = useState<
     PluginFormat[]
   >(["VST3", "CLAP", "MOD Audio"]);
-  const [pluginFolders, setPluginFolders] = useState<PluginFolders>({});
+  const [pluginFolders, setPluginFolders] = usePersistedState<PluginFolders>(
+    "pluginFolders",
+    {},
+  );
 
   function onPluginFolderChange(name: string, value: string) {
     setPluginFolders({ ...pluginFolders, [name]: value });
