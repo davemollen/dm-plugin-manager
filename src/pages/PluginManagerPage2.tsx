@@ -242,13 +242,15 @@ export function PluginManagerPage2() {
           </Button>
         </div>
         {!noPluginsSelected && (
-          <Button
-            isLoading={isProcessing}
-            disabled={isProcessing}
-            onClick={mode === "Install" ? createPlugins : deletePlugins}
-          >
-            {mode} plugins
-          </Button>
+          <div className="rounded-lg bg-background">
+            <Button
+              isLoading={isProcessing}
+              disabled={isProcessing}
+              onClick={mode === "Install" ? createPlugins : deletePlugins}
+            >
+              {mode} plugins
+            </Button>
+          </div>
         )}
       </div>
     </div>
