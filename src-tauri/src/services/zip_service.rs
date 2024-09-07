@@ -1,4 +1,4 @@
-use crate::mod_plugin_controller;
+use crate::mod_plugin_controller::ArrayBufferWithPath;
 use std::fs::{self, File};
 use std::io::{self, Read};
 use std::path::PathBuf;
@@ -38,8 +38,8 @@ impl ZipService {
     pub fn unzip_to_u8(
         file_path: &PathBuf,
         starts_with: &PathBuf,
-    ) -> Result<Vec<mod_plugin_controller::ArrayBufWithPath>, io::Error> {
-        let mut result: Vec<mod_plugin_controller::ArrayBufWithPath> = Vec::new();
+    ) -> Result<Vec<ArrayBufferWithPath>, io::Error> {
+        let mut result: Vec<ArrayBufferWithPath> = Vec::new();
         let file = File::open(file_path)?;
         let mut archive = Archive::new(file);
 
@@ -57,7 +57,7 @@ impl ZipService {
                 let mut buffer = Vec::new();
                 entry.read_to_end(&mut buffer)?;
 
-                result.push(mod_plugin_controller::ArrayBufWithPath { path, buffer })
+                result.push(ArrayBufferWithPath { path, buffer })
             }
         }
 

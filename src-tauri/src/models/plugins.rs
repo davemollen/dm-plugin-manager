@@ -41,3 +41,9 @@ pub struct SelectedPlugins {
     #[serde(rename = "MOD Audio")]
     pub mod_audio: Vec<String>,
 }
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct ArrayBufferWithPath {
+    pub path: String,
+    pub buffer: Vec<u8>,
+}

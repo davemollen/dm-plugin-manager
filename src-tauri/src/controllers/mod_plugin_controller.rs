@@ -1,20 +1,16 @@
 #[path = "./mod_plugin_controller/mod_plugin_service.rs"]
 mod mod_plugin_service;
+#[path = "../models/plugins.rs"]
+mod plugins;
 #[path = "../services/ssh_service.rs"]
 pub mod ssh_service;
 use mod_plugin_service::{
     convert_to_path_object, derive_destination_folder_path, extract_root_folder_name,
 };
-use serde::Deserialize;
+pub use plugins::ArrayBufferWithPath;
 pub use ssh_service::{SshError, SshService};
 use std::path::Path;
 use thiserror::Error;
-
-#[derive(Deserialize, Debug, Clone)]
-pub struct ArrayBufWithPath {
-    pub path: String,
-    pub buffer: Vec<u8>,
-}
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -52,7 +48,7 @@ pub async fn get_mod_plugins() -> Result<Vec<String>, Error> {
 }
 
 #[tauri::command]
-pub async fn create_mod_plugins(files: Vec<ArrayBufWithPath>) -> Result<Vec<String>, Error> {
+pub async fn create_mod_plugins(files: Vec<ArrayBufferWithPath>) -> Result<Vec<String>, Error> {
     let mut plugin_names: Vec<String> = Vec::new();
     let ssh_service = SshService::connect("192.168.51.1", "root", "mod").await?;
 
