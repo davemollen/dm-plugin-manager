@@ -38,6 +38,6 @@
   }
 }
 
-body:has(#small-nav.flex) {
+body:has(#small-nav.flex), body:has(#app-update) {
   @apply overflow-hidden;
 }

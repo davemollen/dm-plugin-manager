@@ -9,6 +9,7 @@ import { Navigation } from "./components/Navigation";
 import { PluginContextProvider } from "./contexts/PluginContextProvider";
 import { PluginManagerSuccess } from "./pages/PluginManagerSuccess";
 import { PluginManagerError } from "./pages/PluginManagerError";
+import { AppUpdater } from "./components/AppUpdater";
 
 function App() {
   useEffect(() => {
@@ -44,6 +45,7 @@ function App() {
                   element={<ModPluginManager />}
                 />
               </Routes>
+              <AppUpdater />
             </main>
           </Navigation>
         </Router>

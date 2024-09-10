@@ -12,6 +12,8 @@
     "core:event:allow-listen",
     "core:event:default",
     "os:allow-os-type",
-    "dialog:allow-open"
+    "dialog:allow-open",
+    "updater:default",
+    "core:resources:allow-close"
   ]
 }
