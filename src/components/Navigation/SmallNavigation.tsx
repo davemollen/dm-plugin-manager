@@ -39,9 +39,12 @@ export function SmallNavigation({
           to="/"
           onClick={closeSmallMenu}
           className={() => {
-            const isActive =
-              location.pathname === "/" ||
-              location.pathname === "/plugin-manager-page-2";
+            const isActive = [
+              "/",
+              "/plugin-manager-page-2",
+              "/plugin-manager-success",
+              "/plugin-manager-error",
+            ].includes(location.pathname);
             return `relative px-6 py-3 hover:text-link ${isActive ? "bg-onBackground text-link before:absolute before:bottom-0 before:left-0 before:top-0 before:w-1 before:bg-blue-400" : ""}`;
           }}
         >

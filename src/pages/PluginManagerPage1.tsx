@@ -10,9 +10,11 @@ export function PluginManagerPage1() {
   const {
     mode,
     selectedPluginFormats,
+    selectedModPlatform,
     pluginFolders,
     setMode,
     setSelectedPluginFormats,
+    setSelectedModPlatform,
     onPluginFolderChange,
   } = usePluginContext();
   const navigate = useNavigate();
@@ -20,6 +22,7 @@ export function PluginManagerPage1() {
   const showFolderSelector =
     selectedPluginFormats.includes("VST3") ||
     selectedPluginFormats.includes("CLAP");
+  const showModPlatformSelector = selectedPluginFormats.includes("MOD Audio");
   const { defaultVst3Folder, defaultClapFolder } = getDefaultPluginFolders();
 
   function onSubmit() {
@@ -32,7 +35,7 @@ export function PluginManagerPage1() {
         groupName="Mode"
         items={["Install", "Uninstall"]}
         selectedItem={mode}
-        onChange={(item) => setMode(item)}
+        onChange={setMode}
         className="w-36"
         kind="bordered"
       />
@@ -43,12 +46,26 @@ export function PluginManagerPage1() {
         selectedItems={selectedPluginFormats}
         onChange={setSelectedPluginFormats}
         kind="bordered"
-        className="mt-8 max-w-sm"
+        className="mt-6 max-w-sm"
       />
+
+      {showModPlatformSelector && (
+        <>
+          <h4 className="mt-6 font-sans text-lg font-bold">Plugin location</h4>
+          <RadioButtonList
+            groupName="MOD platform"
+            items={["Duo", "DuoX", "Dwarf"]}
+            selectedItem={selectedModPlatform}
+            onChange={setSelectedModPlatform}
+            kind="bordered"
+            className="mt-2 w-36"
+          />
+        </>
+      )}
 
       {showFolderSelector && (
         <>
-          <h4 className="mt-8 font-sans text-lg font-bold">Plugin location</h4>
+          <h4 className="mt-6 font-sans text-lg font-bold">Plugin location</h4>
           <div className="mt-2 flex flex-col gap-2">
             {selectedPluginFormats.includes("VST3") && (
               <div className="flex items-center gap-2">
@@ -77,7 +94,7 @@ export function PluginManagerPage1() {
           </div>
         </>
       )}
-      <div className="sticky bottom-4 mt-8 inline-block rounded-lg bg-background">
+      <div className="sticky bottom-4 mt-6 inline-block rounded-lg bg-background">
         <Button
           disabled={selectedPluginFormats.length === 0}
           onClick={onSubmit}

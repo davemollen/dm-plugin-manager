@@ -1,5 +1,4 @@
 use super::{
-    mod_platform::ModPlatform,
     plugin_format::PluginFormat,
     plugins::GetPluginsResponse,
     utils::{get_plugin_bundle_name, get_plugin_folder, get_plugin_path},
@@ -58,18 +57,12 @@ pub async fn get_installed_mod_plugins(
     plugin_formats: &Vec<String>,
     installable_plugins: &GetPluginsResponse,
     installed_plugins: &mut GetPluginsResponse,
-    mod_platform: Option<ModPlatform>,
 ) -> Result<(), Error> {
     let plugin_format_key = PluginFormat::ModAudio.to_string();
     if !plugin_formats.contains(&plugin_format_key) {
         return Ok(());
     }
-    let plugins = match mod_platform {
-        Some(ModPlatform::Duo) => &installable_plugins.mod_audio.duo,
-        Some(ModPlatform::DuoX) => &installable_plugins.mod_audio.duo_x,
-        Some(ModPlatform::Dwarf) => &installable_plugins.mod_audio.dwarf,
-        None => return Ok(()),
-    };
+    let plugins = &installable_plugins.mod_audio;
     if plugins.is_empty() {
         return Ok(());
     }
@@ -86,7 +79,7 @@ pub async fn get_installed_mod_plugins(
         }
     }?;
 
-    let found_plugins: Vec<String> = plugins
+    installed_plugins.mod_audio = plugins
         .iter()
         .filter_map(|plugin| {
             let plugin_name = plugin.as_str();
@@ -97,13 +90,6 @@ pub async fn get_installed_mod_plugins(
                 .map(|_| plugin.to_owned())
         })
         .collect();
-
-    match mod_platform {
-        Some(ModPlatform::Duo) => installed_plugins.mod_audio.duo = found_plugins,
-        Some(ModPlatform::DuoX) => installed_plugins.mod_audio.duo_x = found_plugins,
-        Some(ModPlatform::Dwarf) => installed_plugins.mod_audio.dwarf = found_plugins,
-        None => return Ok(()),
-    }
 
     Ok(())
 }

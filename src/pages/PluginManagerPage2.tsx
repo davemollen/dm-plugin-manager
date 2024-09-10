@@ -1,7 +1,5 @@
 import { Button } from "@/components/Button";
-import { Checkbox } from "@/components/Checkbox";
 import { CheckboxList } from "@/components/CheckboxList";
-import { RadioButtonList } from "@/components/RadioButtonList";
 import { useToastContext } from "@/hooks/useToastContext";
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useState } from "react";
@@ -10,43 +8,32 @@ import { error } from "@tauri-apps/plugin-log";
 import { Skeleton } from "./PluginManagerPage2/Skeleton";
 import { usePluginContext } from "@/hooks/usePluginContext";
 import { useNavigate } from "react-router-dom";
-import {
-  FetchPluginsResponse,
-  ModPlatform,
-  SelectedPlugins,
-} from "@/models/plugins";
+import { FetchPluginsResponse, SelectedPlugins } from "@/models/plugins";
 
-const initialModPlugins = {
-  Duo: [],
-  DuoX: [],
-  Dwarf: [],
-};
 const initialPlugins: FetchPluginsResponse = {
   VST3: [],
   CLAP: [],
-  "MOD Audio": initialModPlugins,
+  "MOD Audio": [],
   modIsConnected: undefined,
 };
 
 export function PluginManagerPage2() {
-  const { mode, selectedPluginFormats, pluginFolders } = usePluginContext();
+  const { mode, selectedPluginFormats, selectedModPlatform, pluginFolders } =
+    usePluginContext();
   const [plugins, setPlugins] = useState<FetchPluginsResponse>(initialPlugins);
-  const [selectedModPlatform, setSelectedModPlatform] =
-    useState<ModPlatform>("Dwarf");
   const [selectedPlugins, setSelectedPlugins] = useState<SelectedPlugins>({
     ...initialPlugins,
-    "MOD Audio": initialPlugins["MOD Audio"][selectedModPlatform],
+    "MOD Audio": initialPlugins["MOD Audio"],
   });
   const [isFetching, setIsFetching] = useState<boolean>(false);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const toast = useToastContext();
   const navigate = useNavigate();
 
-  const hasModPlugins = selectedPlugins["MOD Audio"]?.length;
   const noPluginsSelected =
     !selectedPlugins.VST3?.length &&
     !selectedPlugins.CLAP?.length &&
-    !hasModPlugins;
+    !selectedPlugins["MOD Audio"]?.length;
 
   async function fetchPlugins() {
     try {
@@ -56,6 +43,7 @@ export function PluginManagerPage2() {
         mode === "Install"
           ? await invoke<FetchPluginsResponse>("get_installable_plugins", {
               pluginFormats: selectedPluginFormats,
+              modPlatform: selectedModPlatform,
             })
           : await invoke<FetchPluginsResponse>("get_installed_plugins", {
               ...pluginFolders,
@@ -65,9 +53,7 @@ export function PluginManagerPage2() {
       setPlugins(plugins);
       setSelectedPlugins({
         ...plugins,
-        "MOD Audio": plugins.modIsConnected
-          ? plugins["MOD Audio"][selectedModPlatform]
-          : [],
+        "MOD Audio": plugins.modIsConnected ? plugins["MOD Audio"] : [],
       });
     } catch (e) {
       setPlugins(initialPlugins);
@@ -168,14 +154,14 @@ export function PluginManagerPage2() {
 
         {selectedPluginFormats.includes("MOD Audio") && (
           <CheckboxList
-            title={selectedModPlatform}
-            items={
-              plugins.modIsConnected
-                ? (plugins["MOD Audio"][selectedModPlatform] ?? [])
-                : []
-            }
+            title={`MOD ${selectedModPlatform}`}
+            items={plugins.modIsConnected ? plugins["MOD Audio"] : []}
             selectedItems={selectedPlugins["MOD Audio"]}
-            disabled={isProcessing || !plugins.modIsConnected || !hasModPlugins}
+            disabled={
+              isProcessing ||
+              !plugins.modIsConnected ||
+              !plugins["MOD Audio"].length
+            }
             onChange={(items) => {
               setSelectedPlugins({
                 ...selectedPlugins,
@@ -185,35 +171,6 @@ export function PluginManagerPage2() {
             kind="bordered"
             className="max-w-sm"
             checkboxClassName={mode === "Install" ? "!pl-10" : "!pl-6"}
-            checkAllComponent={(props) => (
-              <div>
-                <Checkbox
-                  {...props}
-                  id="MOD Audio"
-                  name="MOD Audio"
-                  value="MOD Audio"
-                  className="bg-panel p-2"
-                />
-                {mode === "Install" && props.items.length > 0 && (
-                  <RadioButtonList
-                    groupName="MOD Audio"
-                    items={Object.keys(plugins["MOD Audio"]) as ModPlatform[]}
-                    selectedItem={selectedModPlatform}
-                    disabled={props.disabled}
-                    onChange={(item) => {
-                      setSelectedModPlatform(item);
-                      setSelectedPlugins({
-                        ...selectedPlugins,
-                        ["MOD Audio"]: plugins["MOD Audio"]?.[item],
-                      });
-                    }}
-                    kind="bordered"
-                    className="!rounded-none !border-l-0 !border-r-0"
-                    radioButtonClassName="pl-4"
-                  />
-                )}
-              </div>
-            )}
             emptyComponent={
               <>
                 {plugins.modIsConnected === false ? (

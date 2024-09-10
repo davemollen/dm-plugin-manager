@@ -27,7 +27,7 @@ pub struct GetPluginsResponse {
     #[serde(rename = "CLAP")]
     pub clap: Vec<String>,
     #[serde(rename = "MOD Audio")]
-    pub mod_audio: ModPlugins,
+    pub mod_audio: Vec<String>,
     #[serde(rename = "modIsConnected")]
     pub mod_is_connected: bool,
 }

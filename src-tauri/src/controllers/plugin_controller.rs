@@ -64,6 +64,7 @@ impl serde::Serialize for Error {
 #[tauri::command]
 pub async fn get_installable_plugins(
     plugin_formats: Vec<String>,
+    mod_platform: Option<ModPlatform>,
 ) -> Result<GetPluginsResponse, Error> {
     let file = File::open("dm-plugins.json")?;
     let config: PluginsConfig = serde_json::from_reader(file)?;
@@ -78,7 +79,12 @@ pub async fn get_installable_plugins(
     }
 
     if plugin_formats.contains(&PluginFormat::ModAudio.to_string()) {
-        response.mod_audio = config.mod_audio;
+        match mod_platform {
+            Some(ModPlatform::Duo) => response.mod_audio = config.mod_audio.duo,
+            Some(ModPlatform::DuoX) => response.mod_audio = config.mod_audio.duo_x,
+            Some(ModPlatform::Dwarf) => response.mod_audio = config.mod_audio.dwarf,
+            None => (),
+        };
     }
 
     if plugin_formats.contains(&PluginFormat::ModAudio.to_string()) {
@@ -106,7 +112,7 @@ pub async fn get_installed_plugins(
     mod_platform: Option<ModPlatform>,
 ) -> Result<GetPluginsResponse, Error> {
     let mut installed_plugins = GetPluginsResponse::default();
-    let installable_plugins = get_installable_plugins(plugin_formats.clone()).await?;
+    let installable_plugins = get_installable_plugins(plugin_formats.clone(), mod_platform).await?;
 
     get_installed_vst_or_clap_plugins(
         &plugin_formats,
@@ -128,7 +134,6 @@ pub async fn get_installed_plugins(
         &plugin_formats,
         &installable_plugins,
         &mut installed_plugins,
-        mod_platform,
     )
     .await?;
 

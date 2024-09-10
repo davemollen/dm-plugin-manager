@@ -1,6 +1,4 @@
-import { CheckboxSkeleton } from "@/components/Checkbox";
 import { CheckboxListSkeleton } from "@/components/CheckboxList";
-import { RadioButtonListSkeleton } from "@/components/RadioButtonList";
 import { usePluginContext } from "@/hooks/usePluginContext";
 
 export function Skeleton() {
@@ -25,21 +23,11 @@ export function Skeleton() {
           />
         )}
         {selectedPluginFormats.includes("MOD Audio") && (
-          <div className="w-full max-w-sm overflow-hidden rounded-xl border border-panel">
-            <CheckboxSkeleton className="bg-panel p-2" />
-            <RadioButtonListSkeleton
-              count={3}
-              kind="bordered"
-              className="!rounded-none !border-l-0 !border-r-0"
-              radioButtonClassName="pl-4"
-            />
-            <CheckboxListSkeleton
-              count={4}
-              kind="bordered"
-              enableCheckAll={false}
-              className="!rounded-none !border-none"
-            />
-          </div>
+          <CheckboxListSkeleton
+            count={6}
+            kind="bordered"
+            className="w-full max-w-sm"
+          />
         )}
       </div>
     </div>
