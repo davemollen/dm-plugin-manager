@@ -21,6 +21,7 @@ use mod_platform::ModPlatform;
 use plugin_format::PluginFormat;
 use plugins::{GetPluginsResponse, PluginsConfig, SelectedPlugins};
 use std::fs::File;
+use tauri::{path::BaseDirectory, Manager};
 use thiserror::Error;
 
 use crate::mod_plugin_controller::{self, ssh_service::SshError};
@@ -49,6 +50,9 @@ pub enum Error {
     NoDownloadFile,
 
     #[error("{0}")]
+    TauriError(#[from] tauri::Error),
+
+    #[error("{0}")]
     SerializationError(#[from] serde_json::Error),
 }
 
@@ -65,8 +69,12 @@ impl serde::Serialize for Error {
 pub async fn get_installable_plugins(
     plugin_formats: Vec<String>,
     mod_platform: Option<ModPlatform>,
+    handle: tauri::AppHandle,
 ) -> Result<GetPluginsResponse, Error> {
-    let file = File::open("dm-plugins.json")?;
+    let file_path = handle
+        .path()
+        .resolve("resources/dm-plugins.json", BaseDirectory::Resource)?;
+    let file = File::open(&file_path)?;
     let config: PluginsConfig = serde_json::from_reader(file)?;
     let mut response = GetPluginsResponse::default();
 
@@ -110,9 +118,11 @@ pub async fn get_installed_plugins(
     vst3_folder: Option<String>,
     clap_folder: Option<String>,
     mod_platform: Option<ModPlatform>,
+    handle: tauri::AppHandle,
 ) -> Result<GetPluginsResponse, Error> {
     let mut installed_plugins = GetPluginsResponse::default();
-    let installable_plugins = get_installable_plugins(plugin_formats.clone(), mod_platform).await?;
+    let installable_plugins =
+        get_installable_plugins(plugin_formats.clone(), mod_platform, handle).await?;
 
     get_installed_vst_or_clap_plugins(
         &plugin_formats,

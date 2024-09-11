@@ -34,7 +34,9 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "resources": ["src-tauri/dm-plugins.json"]
+    "resources": [
+      "resources/*"
+    ]
   },
   "plugins": {
     "updater": {
