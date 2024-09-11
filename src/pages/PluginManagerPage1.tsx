@@ -51,7 +51,7 @@ export function PluginManagerPage1() {
 
       {showModPlatformSelector && (
         <>
-          <h4 className="mt-6 font-sans text-lg font-bold">Plugin location</h4>
+          <h4 className="mt-6 font-sans text-lg font-bold">MOD platform</h4>
           <RadioButtonList
             groupName="MOD platform"
             items={["Duo", "DuoX", "Dwarf"]}

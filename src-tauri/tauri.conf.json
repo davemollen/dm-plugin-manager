@@ -1,6 +1,6 @@
 {
-  "productName": "dm-plugin-manager",
-  "version": "0.1.1",
+  "productName": "DM Plugin Manager",
+  "version": "0.1.0",
   "identifier": "com.dm-plugin-manager.app",
   "build": {
     "frontendDist": "../dist",

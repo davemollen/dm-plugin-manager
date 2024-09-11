@@ -6,7 +6,19 @@ on:
       - main
 
 jobs:
+  set-release-notes:
+    runs-on: ubuntu-latest
+    outputs:
+      RELEASE_NOTES: ${{ steps.release_notes.outputs.RELEASE_NOTES }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set RELEASE_NOTES env variable
+        id: release_notes
+        run: |
+          echo "RELEASE_NOTES=$(cat release-notes.txt)" >> $GITHUB_OUTPUT
+
   publish-tauri:
+    needs: set-release-notes
     permissions:
       contents: write
     strategy:
@@ -48,10 +60,6 @@ jobs:
       - name: install frontend dependencies
         run: yarn install # change this to npm, pnpm or bun depending on which one you use.
 
-      - name: Set RELEASE_NOTES env variable
-        run: |
-          echo "RELEASE_NOTES=$(cat release-notes.txt)" >> $GITHUB_ENV
-
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -60,7 +68,7 @@ jobs:
         with:
           tagName: app-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
           releaseName: "App v__VERSION__"
-          releaseBody: ${{ env.RELEASE_NOTES }}
+          releaseBody: ${{ needs.set-release-notes.outputs.RELEASE_NOTES }}
           releaseDraft: true
           prerelease: false
           includeUpdaterJson: true

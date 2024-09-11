@@ -14,6 +14,7 @@
     "os:allow-os-type",
     "dialog:allow-open",
     "updater:default",
-    "core:resources:allow-close"
+    "core:resources:allow-close",
+    "process:default"
   ]
 }

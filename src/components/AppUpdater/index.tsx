@@ -5,6 +5,7 @@ import { Button } from "../Button";
 import { ProgressBar } from "./ProgressBar";
 import { useToastContext } from "@/hooks/useToastContext";
 import { error } from "@tauri-apps/plugin-log";
+import { type } from "@tauri-apps/plugin-os";
 
 export function AppUpdater() {
   const ref = useRef<HTMLDivElement>(null);
@@ -12,6 +13,7 @@ export function AppUpdater() {
   const [progress, setProgress] = useState<number>(0);
   const [isUpdating, setIsUpdating] = useState<boolean>(false);
   const toast = useToastContext();
+  const osType = type();
 
   async function updateApp() {
     if (!update) return;
@@ -82,6 +84,13 @@ export function AppUpdater() {
         <p className="mt-2">Current version: {update.currentVersion}</p>
         <p>New version: {update.version}</p>
         <p>Release notes: {update.body}</p>
+
+        {osType === "macos" && (
+          <p className="mt-4">
+            You can't update this app if you haven't installed this app to your
+            "/Applications" folder. Move it to the "/Applications" folder first.
+          </p>
+        )}
         {isUpdating && <ProgressBar progress={progress} className="mt-4" />}
         <div className="mt-4 flex gap-4">
           <Button onClick={updateApp} disabled={isUpdating}>

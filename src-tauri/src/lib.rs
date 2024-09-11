@@ -32,6 +32,7 @@ pub fn run() {
                 .targets([Target::new(TargetKind::Webview)])
                 .build(),
         )
+        .plugin(tauri_plugin_process::init())
         .invoke_handler(tauri::generate_handler![
             get_installable_plugins,
             get_installed_plugins,
