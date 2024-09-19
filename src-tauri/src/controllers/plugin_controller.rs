@@ -14,14 +14,16 @@ mod plugins;
 pub mod utils;
 #[path = "../services/zip_service.rs"]
 mod zip_service;
-use create_plugins_service::{create_mod_plugins, create_vst_or_clap_plugins};
+use create_plugins_service::{
+    create_mod_plugins, create_plugin_folders_on_mac_os, create_vst_or_clap_plugins,
+};
 use delete_plugins_service::{delete_mod_plugins, delete_vst_or_clap_plugins};
 use get_plugins_service::{get_installed_mod_plugins, get_installed_vst_or_clap_plugins};
 use mod_platform::ModPlatform;
 use plugin_format::PluginFormat;
 use plugins::{GetPluginsResponse, PluginsConfig, SelectedPlugins};
 use std::fs::File;
-use tauri::{path::BaseDirectory, Manager};
+use tauri::{path::BaseDirectory, utils::platform::Target, Manager};
 use thiserror::Error;
 
 use crate::mod_plugin_controller::{self, ssh_service::SshError};
@@ -54,6 +56,9 @@ pub enum Error {
 
     #[error("{0}")]
     SerializationError(#[from] serde_json::Error),
+
+    #[error("Unable to create directory: {0}")]
+    CreateDirectoryError(String),
 }
 
 impl serde::Serialize for Error {
@@ -157,6 +162,7 @@ pub async fn create_plugins(
     clap_folder: Option<String>,
     mod_platform: Option<String>,
 ) -> Result<(), Error> {
+    create_plugin_folders_on_mac_os(&plugins, &vst3_folder, &clap_folder)?;
     create_vst_or_clap_plugins(plugins.vst3, PluginFormat::VST3, vst3_folder).await?;
     create_vst_or_clap_plugins(plugins.clap, PluginFormat::CLAP, clap_folder).await?;
     if let Some(platform) = mod_platform {

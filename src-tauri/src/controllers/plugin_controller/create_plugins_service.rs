@@ -1,5 +1,6 @@
 use super::mod_platform::ModPlatform;
 use super::plugin_format::PluginFormat;
+use super::plugins::SelectedPlugins;
 use super::utils::{get_plugin_bundle_name, get_plugin_folder, get_plugin_path};
 use super::zip_service::ZipService;
 use super::Error;
@@ -8,7 +9,53 @@ use futures::future::try_join_all;
 use std::fs::{self, File};
 use std::io;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 use tauri::utils::platform::Target;
+
+pub fn create_plugin_folders_on_mac_os(
+    plugins: &SelectedPlugins,
+    vst3_folder: &Option<String>,
+    clap_folder: &Option<String>,
+) -> Result<(), Error> {
+    if Target::current() != Target::MacOS {
+        return Ok(());
+    }
+
+    let vst3_plugin_paths =
+        concatenate_plugin_paths(&plugins.vst3, &PluginFormat::VST3, vst3_folder)?;
+    let clap_plugin_paths =
+        concatenate_plugin_paths(&plugins.clap, &PluginFormat::CLAP, clap_folder)?;
+    let plugin_paths = format!("{vst3_plugin_paths} {clap_plugin_paths}");
+
+    let username_cmd = Command::new("id").arg("-un").output()?;
+    if username_cmd.status.success() {
+        let username = String::from_utf8_lossy(&username_cmd.stdout)
+            .trim()
+            .to_string();
+
+        let create_dir_script = format!(
+            r#"do shell script "mkdir -p {1} && chmod 755 {1} && chown -R {0}: {1}" with administrator privileges"#,
+            username,
+            plugin_paths.trim()
+        );
+        let create_dir_cmd = Command::new("osascript")
+            .arg("-e")
+            .arg(create_dir_script)
+            .output()?;
+
+        if create_dir_cmd.status.success() {
+            return Ok(());
+        } else {
+            return Err(Error::CreateDirectoryError(
+                String::from_utf8_lossy(&create_dir_cmd.stderr).to_string(),
+            ));
+        }
+    } else {
+        return Err(Error::CreateDirectoryError(
+            String::from_utf8_lossy(&username_cmd.stderr).to_string(),
+        ));
+    }
+}
 
 pub async fn create_vst_or_clap_plugins(
     plugins: Vec<String>,
@@ -185,5 +232,38 @@ fn map_mod_platform(input: &String) -> Option<ModPlatform> {
         "DuoX" => Some(ModPlatform::DuoX),
         "Dwarf" => Some(ModPlatform::Dwarf),
         _ => None,
+    }
+}
+
+fn concatenate_plugin_paths(
+    plugins: &Vec<String>,
+    plugin_format: &PluginFormat,
+    folder: &Option<String>,
+) -> Result<String, Error> {
+    let plugin_folder = if let Some(folder) = folder {
+        PathBuf::from(folder)
+    } else {
+        get_plugin_folder(&plugin_format)?
+    };
+
+    if !plugins.is_empty() {
+        let plugin_paths = plugins
+            .iter()
+            .map(|plugin| {
+                let path = get_plugin_path(&plugin_folder, plugin, plugin_format)?;
+                Ok(path.to_str().unwrap_or_default().to_string())
+            })
+            .fold("".to_string(), |result, path: Result<String, Error>| {
+                match path {
+                    Err(_) => return result,
+                    Ok(path) => {
+                        return format!("{} {}", result, path).into();
+                    }
+                };
+            });
+
+        Ok(plugin_paths)
+    } else {
+        Ok("".to_string())
     }
 }
