@@ -22,9 +22,9 @@ pub fn create_plugin_folders_on_mac_os(
     }
 
     let vst3_plugin_paths =
-        concatenate_plugin_paths(&plugins.vst3, &PluginFormat::VST3, vst3_folder)?;
+        concatenate_plugin_paths(&plugins.vst3, PluginFormat::VST3, vst3_folder)?;
     let clap_plugin_paths =
-        concatenate_plugin_paths(&plugins.clap, &PluginFormat::CLAP, clap_folder)?;
+        concatenate_plugin_paths(&plugins.clap, PluginFormat::CLAP, clap_folder)?;
     let plugin_paths = format!("{vst3_plugin_paths} {clap_plugin_paths}");
 
     let username_cmd = Command::new("id").arg("-un").output()?;
@@ -57,10 +57,39 @@ pub fn create_plugin_folders_on_mac_os(
     }
 }
 
+pub fn remove_plugin_folders_on_mac_os(
+    plugins: &Vec<String>,
+    plugin_format: PluginFormat,
+    folder: &Option<String>,
+) -> Result<(), Error> {
+    if Target::current() != Target::MacOS {
+        return Ok(());
+    }
+
+    let plugin_paths = concatenate_plugin_paths(&plugins, plugin_format, folder)?;
+
+    let remove_dir_script = format!(
+        r#"do shell script "rm -rf {}" with administrator privileges"#,
+        plugin_paths.trim()
+    );
+    let remove_dir_cmd = Command::new("osascript")
+        .arg("-e")
+        .arg(remove_dir_script)
+        .output()?;
+
+    if remove_dir_cmd.status.success() {
+        return Ok(());
+    } else {
+        return Err(Error::CreateDirectoryError(
+            String::from_utf8_lossy(&remove_dir_cmd.stderr).to_string(),
+        ));
+    }
+}
+
 pub async fn create_vst_or_clap_plugins(
-    plugins: Vec<String>,
+    plugins: &Vec<String>,
     target_plugin_format: PluginFormat,
-    folder: Option<String>,
+    folder: &Option<String>,
 ) -> Result<(), Error> {
     if plugins.is_empty() {
         return Ok(());
@@ -237,7 +266,7 @@ fn map_mod_platform(input: &String) -> Option<ModPlatform> {
 
 fn concatenate_plugin_paths(
     plugins: &Vec<String>,
-    plugin_format: &PluginFormat,
+    plugin_format: PluginFormat,
     folder: &Option<String>,
 ) -> Result<String, Error> {
     let plugin_folder = if let Some(folder) = folder {
@@ -250,7 +279,7 @@ fn concatenate_plugin_paths(
         let plugin_paths = plugins
             .iter()
             .map(|plugin| {
-                let path = get_plugin_path(&plugin_folder, plugin, plugin_format)?;
+                let path = get_plugin_path(&plugin_folder, plugin, &plugin_format)?;
                 Ok(path.to_str().unwrap_or_default().to_string())
             })
             .fold("".to_string(), |result, path: Result<String, Error>| {
