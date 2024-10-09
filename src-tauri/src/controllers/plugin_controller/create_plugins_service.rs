@@ -17,7 +17,7 @@ pub fn create_plugin_folders_on_mac_os(
     vst3_folder: &Option<String>,
     clap_folder: &Option<String>,
 ) -> Result<(), Error> {
-    if Target::current() != Target::MacOS {
+    if Target::current() != Target::MacOS || (plugins.vst3.is_empty() && plugins.clap.is_empty()) {
         return Ok(());
     }
 
