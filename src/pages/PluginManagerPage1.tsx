@@ -19,10 +19,6 @@ export function PluginManagerPage1() {
   } = usePluginContext();
   const navigate = useNavigate();
 
-  const showFolderSelector =
-    selectedPluginFormats.includes("VST3") ||
-    selectedPluginFormats.includes("CLAP");
-  const showModPlatformSelector = selectedPluginFormats.includes("MOD Audio");
   const { defaultVst3Folder, defaultClapFolder } = getDefaultPluginFolders();
 
   function onSubmit() {
@@ -49,7 +45,7 @@ export function PluginManagerPage1() {
         className="mt-6 max-w-sm"
       />
 
-      {showModPlatformSelector && (
+      {selectedPluginFormats.includes("MOD Audio") && (
         <>
           <h4 className="mt-6 font-sans text-lg font-bold">MOD platform</h4>
           <RadioButtonList
@@ -63,7 +59,8 @@ export function PluginManagerPage1() {
         </>
       )}
 
-      {showFolderSelector && (
+      {(selectedPluginFormats.includes("VST3") ||
+        selectedPluginFormats.includes("CLAP")) && (
         <>
           <h4 className="mt-6 font-sans text-lg font-bold">Plugin location</h4>
           <div className="mt-2 flex flex-col gap-2">
