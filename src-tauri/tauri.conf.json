@@ -1,6 +1,6 @@
 {
   "productName": "DM Plugin Manager",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "identifier": "com.dm-plugin-manager.app",
   "build": {
     "frontendDist": "../dist",
@@ -34,9 +34,7 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "resources": [
-      "resources/*"
-    ]
+    "resources": ["resources/*"]
   },
   "plugins": {
     "updater": {
