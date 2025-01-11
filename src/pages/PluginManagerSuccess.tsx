@@ -23,10 +23,11 @@ export function PluginManagerSuccess() {
         Successfully {mode === "Install" ? "installed" : "uninstalled"} plugins
       </h2>
       <p className="max-w-sm">
-        You can close this application or install more plugins.
+        You can close this application or go back to install or uninstall other
+        plugins.
       </p>
       <Button onClick={onClick} className="mt-4">
-        Install more plugins
+        Go back
       </Button>
     </div>
   );
