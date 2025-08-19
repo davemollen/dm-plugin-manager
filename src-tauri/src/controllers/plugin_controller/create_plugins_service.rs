@@ -7,7 +7,7 @@ use super::Error;
 use crate::mod_plugin_controller;
 use futures::future::try_join_all;
 use std::fs::{self, File};
-use std::io;
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use tauri::utils::platform::Target;
@@ -16,8 +16,11 @@ pub fn create_plugin_folders_on_mac_os(
     plugins: &SelectedPlugins,
     vst3_folder: &Option<String>,
     clap_folder: &Option<String>,
+    lv2_folder: &Option<String>,
 ) -> Result<(), Error> {
-    if Target::current() != Target::MacOS || (plugins.vst3.is_empty() && plugins.clap.is_empty()) {
+    if Target::current() != Target::MacOS
+        || (plugins.vst3.is_empty() && plugins.clap.is_empty() && plugins.lv2.is_empty())
+    {
         return Ok(());
     }
 
@@ -25,7 +28,8 @@ pub fn create_plugin_folders_on_mac_os(
         concatenate_plugin_paths(&plugins.vst3, PluginFormat::VST3, vst3_folder)?;
     let clap_plugin_paths =
         concatenate_plugin_paths(&plugins.clap, PluginFormat::CLAP, clap_folder)?;
-    let plugin_paths = format!("{vst3_plugin_paths} {clap_plugin_paths}");
+    let lv2_plugin_paths = concatenate_plugin_paths(&plugins.lv2, PluginFormat::LV2, lv2_folder)?;
+    let plugin_paths = format!("{vst3_plugin_paths} {clap_plugin_paths} {lv2_plugin_paths}");
 
     let username_cmd = Command::new("id").arg("-un").output()?;
     if username_cmd.status.success() {
@@ -38,11 +42,11 @@ pub fn create_plugin_folders_on_mac_os(
             username,
             plugin_paths.trim()
         );
+
         let create_dir_cmd = Command::new("osascript")
             .arg("-e")
             .arg(create_dir_script)
             .output()?;
-
         if create_dir_cmd.status.success() {
             return Ok(());
         } else {
@@ -86,7 +90,7 @@ pub fn remove_plugin_folders_on_mac_os(
     }
 }
 
-pub async fn create_vst_or_clap_plugins(
+pub async fn create_vst3_clap_or_lv2_plugins(
     plugins: &Vec<String>,
     target_plugin_format: PluginFormat,
     folder: &Option<String>,
@@ -139,7 +143,7 @@ pub async fn create_mod_plugins(plugins: Vec<String>, platform: &String) -> Resu
 
 async fn create_mod_plugin(plugin_name: &str, mod_platform: &String) -> Result<(), Error> {
     let mod_platform = map_mod_platform(mod_platform);
-    let zipfile_path = download_zip_file(plugin_name, mod_platform).await?;
+    let zipfile_path = download_zip_file(plugin_name, PluginFormat::ModAudio, mod_platform).await?;
     let bundle_name = get_plugin_bundle_name(plugin_name, &PluginFormat::ModAudio)?;
     let starts_with = match zipfile_path.with_extension("").file_name() {
         Some(folder) => Ok(PathBuf::from(folder).join(&bundle_name)),
@@ -172,7 +176,7 @@ async fn create_plugin(
 ) -> Result<(), Error> {
     let bundle_name = get_plugin_bundle_name(plugin_name, &plugin_format)?;
     let plugin_path = get_plugin_path(plugin_folder, plugin_name, &plugin_format)?;
-    let zipfile_path = download_zip_file(plugin_name, None).await?;
+    let zipfile_path = download_zip_file(plugin_name, plugin_format, None).await?;
     let unzipped_folder = zipfile_path.with_extension("");
 
     let unzip_result = ZipService::unzip(&zipfile_path).map_err(Error::from);
@@ -196,9 +200,10 @@ async fn create_plugin(
 
 async fn download_zip_file(
     plugin_name: &str,
+    plugin_format: PluginFormat,
     mod_platform: Option<ModPlatform>,
 ) -> Result<PathBuf, Error> {
-    let download_file_name = get_download_file_name(plugin_name, mod_platform)?;
+    let download_file_name = get_download_file_name(plugin_name, plugin_format, mod_platform)?;
     let url = format!(
         "https://github.com/davemollen/{0}/releases/latest/download/{1}",
         plugin_name, download_file_name
@@ -209,31 +214,42 @@ async fn download_zip_file(
     let mut zipfile = File::create(&zipfile_path)?;
 
     match {
-        io::copy(&mut zipfile_content.as_ref(), &mut zipfile)?;
+        zipfile.write_all(&zipfile_content)?;
+        zipfile.sync_all()?;
         Ok(())
     } {
-        Ok(()) => Ok(zipfile_path),
+        Ok(_) => {
+            drop(zipfile);
+            Ok(zipfile_path)
+        }
         Err(e) => {
             fs::remove_file(&zipfile_path)?;
-            Err(e)
+            Err(Error::FileSystemError(e))
         }
     }
 }
 
 fn get_download_file_name(
     plugin_name: &str,
+    plugin_format: PluginFormat,
     mod_platform: Option<ModPlatform>,
 ) -> Result<String, Error> {
-    let os = match (Target::current(), mod_platform) {
-        (Target::MacOS, None) => Ok("vst-and-clap-macos".to_string()),
-        (Target::Windows, None) => Ok("vst-and-clap-windows".to_string()),
-        (Target::Linux, None) => Ok("vst-and-clap-ubuntu".to_string()),
-        (_, Some(mod_platform)) => match mod_platform {
+    let os = match (Target::current(), plugin_format, mod_platform) {
+        (Target::MacOS, PluginFormat::LV2, None) => Ok("moddesktop-lv2-macos".to_string()),
+        (Target::Windows, PluginFormat::LV2, None) => Ok("moddesktop-lv2-windows".to_string()),
+        (Target::Linux, PluginFormat::LV2, None) => Ok("moddesktop-lv2-ubuntu".to_string()),
+        (Target::MacOS, PluginFormat::VST3, None) => Ok("vst3-and-clap-macos".to_string()),
+        (Target::Windows, PluginFormat::VST3, None) => Ok("vst3-and-clap-windows".to_string()),
+        (Target::Linux, PluginFormat::VST3, None) => Ok("vst3-and-clap-ubuntu".to_string()),
+        (Target::MacOS, PluginFormat::CLAP, None) => Ok("vst3-and-clap-macos".to_string()),
+        (Target::Windows, PluginFormat::CLAP, None) => Ok("vst3-and-clap-windows".to_string()),
+        (Target::Linux, PluginFormat::CLAP, None) => Ok("vst3-and-clap-ubuntu".to_string()),
+        (_, PluginFormat::ModAudio, Some(mod_platform)) => match mod_platform {
             ModPlatform::Dwarf => Ok("moddwarf-new".to_string()),
             ModPlatform::Duo => Ok("modduo-new".to_string()),
             ModPlatform::DuoX => Ok("modduox-new".to_string()),
         },
-        (_, None) => Err(Error::NoDownloadFile),
+        _ => Err(Error::NoDownloadFile),
     }?;
 
     Ok(format!("{0}-{1}.zip", plugin_name, os))

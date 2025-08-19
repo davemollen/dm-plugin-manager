@@ -20,6 +20,7 @@ pub fn get_plugin_bundle_name(
     match plugin_format {
         PluginFormat::VST3 => Ok(format!("{}.vst3", plugin_name)),
         PluginFormat::CLAP => Ok(format!("{}.clap", plugin_name)),
+        PluginFormat::LV2 => Ok(format!("{}.lv2", plugin_name)),
         PluginFormat::ModAudio => Ok(format!("{}.lv2", plugin_name)),
     }
 }
@@ -29,14 +30,19 @@ pub fn get_plugin_folder(plugin_format: &PluginFormat) -> Result<PathBuf, Error>
     let plugin_folder = match (plugin_format, Target::current(), home_dir) {
         (PluginFormat::VST3, Target::MacOS, _) => Ok(PathBuf::from("/Library/Audio/Plug-Ins/VST3")),
         (PluginFormat::CLAP, Target::MacOS, _) => Ok(PathBuf::from("/Library/Audio/Plug-Ins/CLAP")),
+        (PluginFormat::LV2, Target::MacOS, _) => Ok(PathBuf::from("/Library/Audio/Plug-Ins/LV2")),
         (PluginFormat::VST3, Target::Windows, _) => {
             Ok(PathBuf::from("C:/Program Files/Common Files/VST3"))
         }
         (PluginFormat::CLAP, Target::Windows, _) => {
             Ok(PathBuf::from("C:/Program Files/Common Files/CLAP"))
         }
+        (PluginFormat::LV2, Target::Windows, _) => {
+            Ok(PathBuf::from("C:/Program Files/Common Files/LV2"))
+        }
         (PluginFormat::VST3, Target::Linux, Some(home)) => Ok(home.join(Path::new(".vst3"))),
         (PluginFormat::CLAP, Target::Linux, Some(home)) => Ok(home.join(Path::new(".clap"))),
+        (PluginFormat::LV2, Target::Linux, Some(home)) => Ok(home.join(Path::new(".lv2"))),
         (_, _, _) => Err(Error::NoPluginFolder),
     }?;
 

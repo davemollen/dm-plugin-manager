@@ -12,7 +12,7 @@ export function DisconnectedMod({
   return (
     <div className={className}>
       <p className="text-sm">
-        Make sure your MOD is hooked up via USB and try to reconnect.
+        Make sure your MOD device is hooked up via USB and try to reconnect.
         {` If it still doesn't connect, try to reboot your MOD and connect again.`}
       </p>
       <Button
@@ -21,7 +21,7 @@ export function DisconnectedMod({
         disabled={disabled}
         className="mt-4 h-auto px-3 py-2 text-sm"
       >
-        Connect with MOD
+        Connect with MOD device
       </Button>
     </div>
   );

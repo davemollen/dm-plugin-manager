@@ -28,7 +28,7 @@ export function CheckboxList<T extends string>({
   checkAllClassName,
   checkboxClassName,
 }: {
-  title: string;
+  title: string | ReactNode;
   items: T[];
   selectedItems?: T[];
   kind?: Kind;

@@ -1,1 +1,3 @@
-Some text was improved
+- new dm-TimeWarp plug-in
+- new dm-Seq plug-in (MOD / LV2 only)
+- LV2 plug-ins can now be installed

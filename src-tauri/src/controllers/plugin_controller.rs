@@ -15,11 +15,11 @@ pub mod utils;
 #[path = "../services/zip_service.rs"]
 mod zip_service;
 use create_plugins_service::{
-    create_mod_plugins, create_plugin_folders_on_mac_os, create_vst_or_clap_plugins,
+    create_mod_plugins, create_plugin_folders_on_mac_os, create_vst3_clap_or_lv2_plugins,
     remove_plugin_folders_on_mac_os,
 };
-use delete_plugins_service::{delete_mod_plugins, delete_vst_or_clap_plugins};
-use get_plugins_service::{get_installed_mod_plugins, get_installed_vst_or_clap_plugins};
+use delete_plugins_service::{delete_mod_plugins, delete_vst3_clap_or_lv2_plugins};
+use get_plugins_service::{get_installed_mod_plugins, get_installed_vst3_clap_or_lv2_plugins};
 use mod_platform::ModPlatform;
 use plugin_format::PluginFormat;
 use plugins::{GetPluginsResponse, PluginsConfig, SelectedPlugins};
@@ -92,6 +92,10 @@ pub async fn get_installable_plugins(
         response.clap = config.clap;
     }
 
+    if plugin_formats.contains(&PluginFormat::LV2.to_string()) {
+        response.lv2 = config.lv2;
+    }
+
     if plugin_formats.contains(&PluginFormat::ModAudio.to_string()) {
         match mod_platform {
             Some(ModPlatform::Duo) => response.mod_audio = config.mod_audio.duo,
@@ -123,6 +127,7 @@ pub async fn get_installed_plugins(
     plugin_formats: Vec<String>,
     vst3_folder: Option<String>,
     clap_folder: Option<String>,
+    lv2_folder: Option<String>,
     mod_platform: Option<ModPlatform>,
     handle: tauri::AppHandle,
 ) -> Result<GetPluginsResponse, Error> {
@@ -130,7 +135,7 @@ pub async fn get_installed_plugins(
     let installable_plugins =
         get_installable_plugins(plugin_formats.clone(), mod_platform, handle).await?;
 
-    get_installed_vst_or_clap_plugins(
+    get_installed_vst3_clap_or_lv2_plugins(
         &plugin_formats,
         PluginFormat::VST3,
         vst3_folder,
@@ -138,10 +143,18 @@ pub async fn get_installed_plugins(
         &mut installed_plugins,
     )?;
 
-    get_installed_vst_or_clap_plugins(
+    get_installed_vst3_clap_or_lv2_plugins(
         &plugin_formats,
         PluginFormat::CLAP,
         clap_folder,
+        &installable_plugins,
+        &mut installed_plugins,
+    )?;
+
+    get_installed_vst3_clap_or_lv2_plugins(
+        &plugin_formats,
+        PluginFormat::LV2,
+        lv2_folder,
         &installable_plugins,
         &mut installed_plugins,
     )?;
@@ -161,20 +174,27 @@ pub async fn create_plugins(
     plugins: SelectedPlugins,
     vst3_folder: Option<String>,
     clap_folder: Option<String>,
+    lv2_folder: Option<String>,
     mod_platform: Option<String>,
 ) -> Result<(), Error> {
-    create_plugin_folders_on_mac_os(&plugins, &vst3_folder, &clap_folder)?;
+    create_plugin_folders_on_mac_os(&plugins, &vst3_folder, &clap_folder, &lv2_folder)?;
 
     if let Err(e) =
-        create_vst_or_clap_plugins(&plugins.vst3, PluginFormat::VST3, &vst3_folder).await
+        create_vst3_clap_or_lv2_plugins(&plugins.vst3, PluginFormat::VST3, &vst3_folder).await
     {
         remove_plugin_folders_on_mac_os(&plugins.vst3, PluginFormat::VST3, &vst3_folder)?;
         return Err(e);
     }
     if let Err(e) =
-        create_vst_or_clap_plugins(&plugins.clap, PluginFormat::CLAP, &clap_folder).await
+        create_vst3_clap_or_lv2_plugins(&plugins.clap, PluginFormat::CLAP, &clap_folder).await
     {
         remove_plugin_folders_on_mac_os(&plugins.clap, PluginFormat::CLAP, &clap_folder)?;
+        return Err(e);
+    }
+    if let Err(e) =
+        create_vst3_clap_or_lv2_plugins(&plugins.lv2, PluginFormat::LV2, &lv2_folder).await
+    {
+        remove_plugin_folders_on_mac_os(&plugins.lv2, PluginFormat::LV2, &lv2_folder)?;
         return Err(e);
     }
 
@@ -191,8 +211,8 @@ pub async fn delete_plugins(
     vst3_folder: Option<String>,
     clap_folder: Option<String>,
 ) -> Result<(), Error> {
-    delete_vst_or_clap_plugins(plugins.vst3, PluginFormat::VST3, vst3_folder).await?;
-    delete_vst_or_clap_plugins(plugins.clap, PluginFormat::CLAP, clap_folder).await?;
+    delete_vst3_clap_or_lv2_plugins(plugins.vst3, PluginFormat::VST3, vst3_folder).await?;
+    delete_vst3_clap_or_lv2_plugins(plugins.clap, PluginFormat::CLAP, clap_folder).await?;
     delete_mod_plugins(plugins.mod_audio).await?;
 
     Ok(())

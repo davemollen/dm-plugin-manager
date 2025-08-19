@@ -22,6 +22,13 @@ export function Skeleton() {
             className="w-full max-w-sm"
           />
         )}
+        {selectedPluginFormats.includes("LV2") && (
+          <CheckboxListSkeleton
+            count={4}
+            kind="bordered"
+            className="w-full max-w-sm"
+          />
+        )}
         {selectedPluginFormats.includes("MOD Audio") && (
           <CheckboxListSkeleton
             count={6}

@@ -7,7 +7,7 @@ interface FolderInputProps
     "type" | "onChange" | "directory"
   > {
   label: string;
-  value: string;
+  value?: string;
   onChange: (name: string, folderPath: string) => void;
 }
 
@@ -45,7 +45,7 @@ export function FolderInput({
         htmlFor={id}
         className="cursor-pointer truncate px-2 py-1 font-light"
       >
-        {value}
+        {value ?? props.placeholder}
       </label>
       <input {...props} type="file" className="hidden" />
     </div>

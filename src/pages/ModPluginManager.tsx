@@ -90,7 +90,7 @@ export function ModPluginManager() {
   function handleErrors(err: unknown) {
     const e = err as string;
     error("Handle error log: " + e);
-    if (e === "Unable to connect with MOD") {
+    if (e === "Unable to connect with MOD device") {
       setModIsDisconnected(true);
     } else {
       toast?.error(e);

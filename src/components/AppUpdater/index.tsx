@@ -59,7 +59,11 @@ export function AppUpdater() {
   }
 
   async function close() {
-    await update?.close();
+    try {
+      await update?.close();
+    } catch (e) {
+      console.error(e);
+    }
     setUpdate(null);
   }
 

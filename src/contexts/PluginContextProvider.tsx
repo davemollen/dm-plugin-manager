@@ -19,7 +19,7 @@ export const PluginContext = createContext<{
 }>({
   mode: "Install",
   selectedModPlatform: "Dwarf",
-  selectedPluginFormats: ["VST3", "CLAP", "MOD Audio"],
+  selectedPluginFormats: ["VST3", "CLAP", "LV2"],
   pluginFolders: {},
   setMode: () => {},
   setSelectedPluginFormats: () => {},
@@ -31,7 +31,7 @@ export function PluginContextProvider({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState<Mode>("Install");
   const [selectedPluginFormats, setSelectedPluginFormats] = useState<
     PluginFormat[]
-  >(["VST3", "CLAP", "MOD Audio"]);
+  >(["VST3", "CLAP", "LV2"]);
   const [selectedModPlatform, setSelectedModPlatform] =
     useState<ModPlatform>("Dwarf");
   const [pluginFolders, setPluginFolders] = usePersistedState<PluginFolders>(

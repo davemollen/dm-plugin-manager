@@ -15,7 +15,7 @@ pub enum SshError {
     #[error("Ssh command error: {0}")]
     CommandError(String),
 
-    #[error("Unable to connect with MOD")]
+    #[error("Unable to connect with MOD device")]
     NoConnection,
 
     #[error("Ssh write to buffer failed: {0}")]

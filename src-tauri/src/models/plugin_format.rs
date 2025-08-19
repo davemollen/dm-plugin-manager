@@ -4,6 +4,7 @@ use std::fmt::{Display, Formatter, Result};
 pub enum PluginFormat {
     VST3,
     CLAP,
+    LV2,
     ModAudio,
 }
 
@@ -15,6 +16,7 @@ impl Display for PluginFormat {
             match self {
                 Self::VST3 => "VST3",
                 Self::CLAP => "CLAP",
+                Self::LV2 => "LV2",
                 Self::ModAudio => "MOD Audio",
             }
         )

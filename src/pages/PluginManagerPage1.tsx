@@ -19,7 +19,8 @@ export function PluginManagerPage1() {
   } = usePluginContext();
   const navigate = useNavigate();
 
-  const { defaultVst3Folder, defaultClapFolder } = getDefaultPluginFolders();
+  const { defaultVst3Folder, defaultClapFolder, defaultLV2Folder } =
+    getDefaultPluginFolders();
 
   function onSubmit() {
     navigate("plugin-manager-page-2");
@@ -38,7 +39,8 @@ export function PluginManagerPage1() {
 
       <CheckboxList
         title="Plugin formats"
-        items={["VST3", "CLAP", "MOD Audio"]}
+        // TODO support key/value pairs
+        items={["VST3", "CLAP", "LV2", "MOD Audio"]}
         selectedItems={selectedPluginFormats}
         onChange={setSelectedPluginFormats}
         kind="bordered"
@@ -60,31 +62,47 @@ export function PluginManagerPage1() {
       )}
 
       {(selectedPluginFormats.includes("VST3") ||
-        selectedPluginFormats.includes("CLAP")) && (
+        selectedPluginFormats.includes("CLAP") ||
+        selectedPluginFormats.includes("LV2")) && (
         <>
           <h4 className="mt-6 font-sans text-lg font-bold">Plugin location</h4>
-          <div className="mt-2 flex flex-col gap-2">
+          <div className="mt-2 flex w-fit flex-col items-stretch gap-4">
             {selectedPluginFormats.includes("VST3") && (
-              <div className="flex items-center gap-2">
-                <p className="font-sans">VST3:</p>
+              <div className="flex items-center gap-4">
+                <p className="w-20 font-sans">VST3:</p>
                 <FolderInput
                   id="VST3-folder"
                   label="Location: "
                   name="vst3Folder"
                   value={pluginFolders.vst3Folder ?? defaultVst3Folder}
                   onChange={onPluginFolderChange}
+                  className="flex-1"
                 />
               </div>
             )}
             {selectedPluginFormats.includes("CLAP") && (
-              <div className="flex items-center gap-2">
-                <p className="font-sans">CLAP:</p>
+              <div className="flex items-center gap-4">
+                <p className="w-20 font-sans">CLAP:</p>
                 <FolderInput
                   id="CLAP-folder"
                   label="Location: "
                   name="clapFolder"
                   value={pluginFolders.clapFolder ?? defaultClapFolder}
                   onChange={onPluginFolderChange}
+                  className="flex-1"
+                />
+              </div>
+            )}
+            {selectedPluginFormats.includes("LV2") && (
+              <div className="flex items-center gap-4">
+                <p className="w-20 font-sans">LV2 / MOD Desktop:</p>
+                <FolderInput
+                  id="LV2-folder"
+                  label="Location: "
+                  name="lv2Folder"
+                  value={pluginFolders.lv2Folder ?? defaultLV2Folder}
+                  onChange={onPluginFolderChange}
+                  className="flex-1"
                 />
               </div>
             )}

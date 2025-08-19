@@ -13,6 +13,7 @@ import { FetchPluginsResponse, SelectedPlugins } from "@/models/plugins";
 const initialPlugins: FetchPluginsResponse = {
   VST3: [],
   CLAP: [],
+  LV2: [],
   "MOD Audio": [],
   modIsConnected: undefined,
 };
@@ -33,6 +34,7 @@ export function PluginManagerPage2() {
   const noPluginsSelected =
     !selectedPlugins.VST3?.length &&
     !selectedPlugins.CLAP?.length &&
+    !selectedPlugins["LV2"]?.length &&
     !selectedPlugins["MOD Audio"]?.length;
 
   async function fetchPlugins() {
@@ -139,6 +141,34 @@ export function PluginManagerPage2() {
             disabled={isProcessing || !plugins.CLAP.length}
             onChange={(items) => {
               setSelectedPlugins({ ...selectedPlugins, CLAP: items });
+            }}
+            kind="bordered"
+            className="max-w-sm"
+            emptyComponent={
+              <p className="py-4 pl-6 pr-2 text-sm">
+                {mode === "Install"
+                  ? "No plugins to install."
+                  : "No plugins installed. Change the folder location if you have stored your plugins in a different place."}
+              </p>
+            }
+          />
+        )}
+
+        {selectedPluginFormats.includes("LV2") && (
+          <CheckboxList
+            title={
+              <div className="flex items-center">
+                LV2&nbsp;<span className="text-xs">/ MOD Desktop</span>
+              </div>
+            }
+            items={plugins["LV2"]}
+            selectedItems={selectedPlugins["LV2"]}
+            disabled={isProcessing || !plugins["LV2"].length}
+            onChange={(items) => {
+              setSelectedPlugins({
+                ...selectedPlugins,
+                LV2: items,
+              });
             }}
             kind="bordered"
             className="max-w-sm"
