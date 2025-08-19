@@ -23,7 +23,7 @@ serde = { version = "1.0.219", features = ["derive"] }
 tauri = { version = "2.0.0-rc.5", features = [] }
 tauri-plugin-log = "2.0.0-rc"
 thiserror = "2.0.15"
-russh = "0.45.0"
+russh = "0.54.1"
 async-trait = "0.1.89"
 tokio = "1.47.1"
 reqwest = "0.12.23"

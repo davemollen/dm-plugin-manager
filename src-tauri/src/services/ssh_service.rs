@@ -1,6 +1,6 @@
 use async_trait::async_trait;
-use russh::{client, keys::key, ChannelMsg, Disconnect};
-use std::{sync::Arc, time::Duration};
+use russh::{client, keys::ssh_key::PublicKey, ChannelMsg, Disconnect};
+use std::{future::Future, sync::Arc, time::Duration};
 use thiserror::Error;
 use tokio::{io::AsyncWriteExt, time::timeout};
 
@@ -28,11 +28,12 @@ struct ClientHandler;
 impl client::Handler for ClientHandler {
     type Error = russh::Error;
 
-    async fn check_server_key(
+    #[allow(unused_variables)]
+    fn check_server_key(
         &mut self,
-        _server_public_key: &key::PublicKey,
-    ) -> Result<bool, Self::Error> {
-        Ok(true)
+        server_public_key: &PublicKey,
+    ) -> impl Future<Output = Result<bool, Self::Error>> + Send {
+        async { Ok(false) }
     }
 }
 
