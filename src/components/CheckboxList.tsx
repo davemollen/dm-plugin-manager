@@ -17,6 +17,7 @@ const checkboxStyle: Record<Kind, string> = {
 
 export function CheckboxList<T extends string>({
   title,
+  titleComponent,
   items,
   selectedItems,
   kind = "default",
@@ -28,7 +29,8 @@ export function CheckboxList<T extends string>({
   checkAllClassName,
   checkboxClassName,
 }: {
-  title: string | ReactNode;
+  title: string;
+  titleComponent?: ReactNode;
   items: T[];
   selectedItems?: T[];
   kind?: Kind;
@@ -91,6 +93,7 @@ export function CheckboxList<T extends string>({
           id={title}
           name={title}
           value={title}
+          labelValue={titleComponent}
           disabled={disabled}
           onChange={onCheckAll}
           className={`${checkAllStyle[kind]} ${checkAllClassName}`.trim()}

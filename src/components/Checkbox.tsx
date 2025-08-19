@@ -1,15 +1,22 @@
 import { faCheck, faMinus } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { DetailedHTMLProps, forwardRef, InputHTMLAttributes } from "react";
+import {
+  DetailedHTMLProps,
+  forwardRef,
+  InputHTMLAttributes,
+  ReactNode,
+} from "react";
 
 interface CheckboxProps
   extends Omit<
     DetailedHTMLProps<InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>,
     "type"
-  > {}
+  > {
+  labelValue?: ReactNode;
+}
 
 export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
-  function Checkbox({ id, name, value, className, ...props }, ref) {
+  function Checkbox({ id, name, value, labelValue, className, ...props }, ref) {
     return (
       <div className={`relative flex items-center gap-2 ${className ?? ""}`}>
         <input
@@ -26,7 +33,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
           htmlFor={id}
           className="cursor-pointer select-none font-sans font-semibold peer-disabled:cursor-default peer-disabled:opacity-50"
         >
-          {value}
+          {labelValue ?? value}
         </label>
         <FontAwesomeIcon
           icon={faCheck}
