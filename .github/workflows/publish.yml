@@ -15,7 +15,12 @@ jobs:
       - name: Set RELEASE_NOTES env variable
         id: release_notes
         run: |
-          echo "RELEASE_NOTES=$(cat release-notes.txt)" >> $GITHUB_OUTPUT
+          text=$(cat release-notes.txt)
+          {
+            echo 'RELEASE_NOTES<<EOF'
+            echo "$text"
+            echo EOF
+          } >> $GITHUB_OUTPUT
 
   publish-tauri:
     needs: set-release-notes

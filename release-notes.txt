@@ -1,3 +1,4 @@
 - new dm-TimeWarp plug-in
-- new dm-Seq plug-in (MOD / LV2 only)
+- new dm-Seq plug-in (LV2 / MOD Desktop only)
 - LV2 plug-ins can now be installed
+- updated packages
