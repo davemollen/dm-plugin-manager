@@ -8,6 +8,7 @@ This includes VST3, CLAP and MOD audio plugins.
 ## Development
 
 Run `npm install` followed by `npx tauri dev` to start the application.
+You might need to install cmake. Run this on macOS: `brew install cmake`.
 
 ### Add plugins
 
