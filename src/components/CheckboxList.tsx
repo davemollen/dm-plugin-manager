@@ -17,7 +17,6 @@ const checkboxStyle: Record<Kind, string> = {
 
 export function CheckboxList<T extends string>({
   title,
-  titleComponent,
   items,
   selectedItems,
   kind = "default",
@@ -30,8 +29,7 @@ export function CheckboxList<T extends string>({
   checkboxClassName,
 }: {
   title: string;
-  titleComponent?: ReactNode;
-  items: T[];
+  items: T[] | Record<T, string>;
   selectedItems?: T[];
   kind?: Kind;
   onChange: (selectedItems: T[]) => void;
@@ -48,10 +46,13 @@ export function CheckboxList<T extends string>({
   checkboxClassName?: string;
 }) {
   const ref = useRef<HTMLInputElement>(null);
+  const itemsArray: T[] = Array.isArray(items)
+    ? items
+    : (Object.keys(items) as T[]);
 
   function onCheckAll(event: ChangeEvent<HTMLInputElement>) {
     if (event.target.checked) {
-      onChange(items);
+      onChange(itemsArray);
     } else {
       onChange([]);
     }
@@ -73,8 +74,8 @@ export function CheckboxList<T extends string>({
     }
 
     if (ref.current) {
-      ref.current.indeterminate = !items.every(predicate);
-      ref.current.checked = items.some(predicate);
+      ref.current.indeterminate = !itemsArray.every(predicate);
+      ref.current.checked = itemsArray.some(predicate);
     }
   }, [selectedItems, ref]);
 
@@ -85,7 +86,7 @@ export function CheckboxList<T extends string>({
           ref,
           onChange: onCheckAll,
           disabled,
-          items,
+          items: itemsArray,
         })
       ) : (
         <Checkbox
@@ -93,25 +94,38 @@ export function CheckboxList<T extends string>({
           id={title}
           name={title}
           value={title}
-          labelValue={titleComponent}
           disabled={disabled}
           onChange={onCheckAll}
           className={`${checkAllStyle[kind]} ${checkAllClassName}`.trim()}
         />
       )}
-      {items.map((item) => (
-        <Checkbox
-          key={item}
-          id={item + title}
-          name={title}
-          value={item}
-          onChange={onCheckboxChange}
-          checked={selectedItems?.includes(item)}
-          disabled={disabled}
-          className={`${checkboxStyle[kind]} ${checkboxClassName}`.trim()}
-        />
-      ))}
-      {items.length === 0 && emptyComponent}
+      {Array.isArray(items)
+        ? items.map((item) => (
+            <Checkbox
+              key={item}
+              id={item + title}
+              name={title}
+              value={item}
+              onChange={onCheckboxChange}
+              checked={selectedItems?.includes(item)}
+              disabled={disabled}
+              className={`${checkboxStyle[kind]} ${checkboxClassName}`.trim()}
+            />
+          ))
+        : Object.entries<string>(items).map(([key, value]) => (
+            <Checkbox
+              key={key}
+              id={key + title}
+              name={key}
+              value={key}
+              labelValue={value}
+              onChange={onCheckboxChange}
+              checked={selectedItems?.includes(key as T)}
+              disabled={disabled}
+              className={`${checkboxStyle[kind]} ${checkboxClassName}`.trim()}
+            />
+          ))}
+      {itemsArray.length === 0 && emptyComponent}
     </div>
   );
 }

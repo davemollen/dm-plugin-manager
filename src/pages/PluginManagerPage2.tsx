@@ -156,12 +156,7 @@ export function PluginManagerPage2() {
 
         {selectedPluginFormats.includes("LV2") && (
           <CheckboxList
-            title="LV2"
-            titleComponent={
-              <div className="flex items-center">
-                LV2&nbsp;<span className="text-xs">/ MOD Desktop</span>
-              </div>
-            }
+            title="LV2 / MOD Desktop"
             items={plugins["LV2"]}
             selectedItems={selectedPlugins["LV2"]}
             disabled={isProcessing || !plugins["LV2"].length}

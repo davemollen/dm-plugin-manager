@@ -39,8 +39,12 @@ export function PluginManagerPage1() {
 
       <CheckboxList
         title="Plugin formats"
-        // TODO support key/value pairs
-        items={["VST3", "CLAP", "LV2", "MOD Audio"]}
+        items={{
+          VST3: "VST3",
+          CLAP: "CLAP",
+          LV2: "LV2 / MOD Desktop",
+          "MOD Audio": "MOD Audio",
+        }}
         selectedItems={selectedPluginFormats}
         onChange={setSelectedPluginFormats}
         kind="bordered"
