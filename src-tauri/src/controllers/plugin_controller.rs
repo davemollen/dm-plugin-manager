@@ -66,6 +66,9 @@ pub enum Error {
 
     #[error("Unable to copy files: {0}")]
     CopyFilesError(String),
+
+    #[error("Unable to remove files: {0}")]
+    RemoveFilesError(String),
 }
 
 impl serde::Serialize for Error {

@@ -5,7 +5,7 @@ use super::{
 };
 use crate::{mod_plugin_controller, plugin_controller::utils::get_plugin_bundle_name};
 use futures::future::try_join_all;
-use std::{fs, path::PathBuf};
+use std::{path::PathBuf, process::Command};
 
 pub async fn delete_desktop_plugins(
     plugins: Vec<String>,
@@ -26,8 +26,10 @@ pub async fn delete_desktop_plugins(
         .iter()
         .map(|plugin| {
             let plugin_folder = plugin_folder.clone();
+            let plugin_format = target_plugin_format.clone();
+
             async move {
-                delete_plugin(&plugin_folder, plugin.as_str(), &PluginFormat::VST3).await?;
+                delete_plugin(&plugin_folder, plugin.as_str(), &plugin_format).await?;
                 Ok::<(), Error>(())
             }
         })
@@ -63,7 +65,20 @@ async fn delete_plugin(
     plugin_format: &PluginFormat,
 ) -> Result<(), Error> {
     let plugin_path = get_plugin_path(plugin_folder, plugin_name, plugin_format)?;
-    fs::remove_dir_all(&plugin_path)?;
+    let remove_plugin_script = format!(
+        r#"do shell script "rm -rf {}" with administrator privileges"#,
+        plugin_path.to_string_lossy()
+    );
+    let remove_plugin_cmd = Command::new("osascript")
+        .arg("-e")
+        .arg(remove_plugin_script)
+        .output()?;
 
-    Ok(())
+    if remove_plugin_cmd.status.success() {
+        return Ok(());
+    } else {
+        return Err(Error::RemoveFilesError(
+            String::from_utf8_lossy(&remove_plugin_cmd.stderr).to_string(),
+        ));
+    }
 }
