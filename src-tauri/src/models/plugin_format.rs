@@ -5,6 +5,7 @@ pub enum PluginFormat {
     VST3,
     CLAP,
     LV2,
+    AUv2,
     ModAudio,
 }
 
@@ -17,6 +18,7 @@ impl Display for PluginFormat {
                 Self::VST3 => "VST3",
                 Self::CLAP => "CLAP",
                 Self::LV2 => "LV2",
+                Self::AUv2 => "AUv2",
                 Self::ModAudio => "MOD Audio",
             }
         )

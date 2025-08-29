@@ -6,6 +6,7 @@ import {
   PluginFormat,
 } from "@/models/plugins";
 import { createContext, ReactNode, useState } from "react";
+import { type } from "@tauri-apps/plugin-os";
 
 export const PluginContext = createContext<{
   mode: Mode;
@@ -19,7 +20,7 @@ export const PluginContext = createContext<{
 }>({
   mode: "Install",
   selectedModPlatform: "Dwarf",
-  selectedPluginFormats: ["VST3", "CLAP", "LV2"],
+  selectedPluginFormats: ["VST3", "CLAP", "AUv2", "LV2"],
   pluginFolders: {},
   setMode: () => {},
   setSelectedPluginFormats: () => {},
@@ -28,10 +29,15 @@ export const PluginContext = createContext<{
 });
 
 export function PluginContextProvider({ children }: { children: ReactNode }) {
+  const osType = type();
   const [mode, setMode] = useState<Mode>("Install");
   const [selectedPluginFormats, setSelectedPluginFormats] = useState<
     PluginFormat[]
-  >(["VST3", "CLAP", "LV2"]);
+  >(
+    (["VST3", "CLAP", "AUv2", "LV2"] as PluginFormat[]).filter(
+      (pluginFormats) => (osType === "macos" ? true : pluginFormats != "AUv2"),
+    ),
+  );
   const [selectedModPlatform, setSelectedModPlatform] =
     useState<ModPlatform>("Dwarf");
   const [pluginFolders, setPluginFolders] = usePersistedState<PluginFolders>(

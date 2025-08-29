@@ -17,6 +17,7 @@ pub fn create_plugin_folders_on_mac_os(
     vst3_folder: &Option<String>,
     clap_folder: &Option<String>,
     lv2_folder: &Option<String>,
+    auv2_folder: &Option<String>,
 ) -> Result<(), Error> {
     if Target::current() != Target::MacOS
         || (plugins.vst3.is_empty() && plugins.clap.is_empty() && plugins.lv2.is_empty())
@@ -29,7 +30,10 @@ pub fn create_plugin_folders_on_mac_os(
     let clap_plugin_paths =
         concatenate_plugin_paths(&plugins.clap, PluginFormat::CLAP, clap_folder)?;
     let lv2_plugin_paths = concatenate_plugin_paths(&plugins.lv2, PluginFormat::LV2, lv2_folder)?;
-    let plugin_paths = format!("{vst3_plugin_paths} {clap_plugin_paths} {lv2_plugin_paths}");
+    let auv2_plugin_paths =
+        concatenate_plugin_paths(&plugins.auv2, PluginFormat::AUv2, auv2_folder)?;
+    let plugin_paths =
+        format!("{vst3_plugin_paths} {clap_plugin_paths} {lv2_plugin_paths} {auv2_plugin_paths}");
 
     let username_cmd = Command::new("id").arg("-un").output()?;
     if username_cmd.status.success() {
@@ -90,7 +94,7 @@ pub fn remove_plugin_folders_on_mac_os(
     }
 }
 
-pub async fn create_vst3_clap_or_lv2_plugins(
+pub async fn create_desktop_plugins(
     plugins: &Vec<String>,
     target_plugin_format: PluginFormat,
     folder: &Option<String>,
@@ -105,6 +109,7 @@ pub async fn create_vst3_clap_or_lv2_plugins(
         get_plugin_folder(&target_plugin_format)?
     };
 
+    // TODO: download plugin zip files for all plugin formats at once. Because they're all in the same zipfile now
     let futures: Vec<_> = plugins
         .iter()
         .map(|plugin| {
@@ -235,20 +240,14 @@ fn get_download_file_name(
     mod_platform: Option<ModPlatform>,
 ) -> Result<String, Error> {
     let os = match (Target::current(), plugin_format, mod_platform) {
-        (Target::MacOS, PluginFormat::LV2, None) => Ok("moddesktop-lv2-macos".to_string()),
-        (Target::Windows, PluginFormat::LV2, None) => Ok("moddesktop-lv2-windows".to_string()),
-        (Target::Linux, PluginFormat::LV2, None) => Ok("moddesktop-lv2-ubuntu".to_string()),
-        (Target::MacOS, PluginFormat::VST3, None) => Ok("vst3-and-clap-macos".to_string()),
-        (Target::Windows, PluginFormat::VST3, None) => Ok("vst3-and-clap-windows".to_string()),
-        (Target::Linux, PluginFormat::VST3, None) => Ok("vst3-and-clap-ubuntu".to_string()),
-        (Target::MacOS, PluginFormat::CLAP, None) => Ok("vst3-and-clap-macos".to_string()),
-        (Target::Windows, PluginFormat::CLAP, None) => Ok("vst3-and-clap-windows".to_string()),
-        (Target::Linux, PluginFormat::CLAP, None) => Ok("vst3-and-clap-ubuntu".to_string()),
         (_, PluginFormat::ModAudio, Some(mod_platform)) => match mod_platform {
             ModPlatform::Dwarf => Ok("moddwarf-new".to_string()),
             ModPlatform::Duo => Ok("modduo-new".to_string()),
             ModPlatform::DuoX => Ok("modduox-new".to_string()),
         },
+        (Target::MacOS, _, None) => Ok("macos".to_string()),
+        (Target::Windows, _, None) => Ok("windows".to_string()),
+        (Target::Linux, _, None) => Ok("ubuntu".to_string()),
         _ => Err(Error::NoDownloadFile),
     }?;
 
@@ -256,19 +255,23 @@ fn get_download_file_name(
 }
 
 fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> Result<(), Error> {
-    fs::create_dir_all(&dst)?;
+    let copy_dir_script = format!(
+        r#"do shell script "cp -r {} {}" with administrator privileges"#,
+        &src.as_ref().to_string_lossy(),
+        &dst.as_ref().to_string_lossy(),
+    );
+    let copy_dir_cmd = Command::new("osascript")
+        .arg("-e")
+        .arg(copy_dir_script)
+        .output()?;
 
-    for entry in fs::read_dir(src)? {
-        let entry = entry?;
-        let file_type = entry.file_type()?;
-        if file_type.is_dir() {
-            copy_dir_all(entry.path(), dst.as_ref().join(entry.file_name()))?;
-        } else {
-            fs::copy(entry.path(), dst.as_ref().join(entry.file_name()))?;
-        }
+    if copy_dir_cmd.status.success() {
+        return Ok(());
+    } else {
+        return Err(Error::CopyFilesError(
+            String::from_utf8_lossy(&copy_dir_cmd.stderr).to_string(),
+        ));
     }
-
-    Ok(())
 }
 
 fn map_mod_platform(input: &String) -> Option<ModPlatform> {

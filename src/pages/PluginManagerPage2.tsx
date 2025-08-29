@@ -14,6 +14,7 @@ const initialPlugins: FetchPluginsResponse = {
   VST3: [],
   CLAP: [],
   LV2: [],
+  AUv2: [],
   "MOD Audio": [],
   modIsConnected: undefined,
 };
@@ -34,6 +35,7 @@ export function PluginManagerPage2() {
   const noPluginsSelected =
     !selectedPlugins.VST3?.length &&
     !selectedPlugins.CLAP?.length &&
+    !selectedPlugins.AUv2?.length &&
     !selectedPlugins["LV2"]?.length &&
     !selectedPlugins["MOD Audio"]?.length;
 
@@ -141,6 +143,27 @@ export function PluginManagerPage2() {
             disabled={isProcessing || !plugins.CLAP.length}
             onChange={(items) => {
               setSelectedPlugins({ ...selectedPlugins, CLAP: items });
+            }}
+            kind="bordered"
+            className="max-w-sm"
+            emptyComponent={
+              <p className="py-4 pl-6 pr-2 text-sm">
+                {mode === "Install"
+                  ? "No plugins to install."
+                  : "No plugins installed. Change the folder location if you have stored your plugins in a different place."}
+              </p>
+            }
+          />
+        )}
+
+        {selectedPluginFormats.includes("AUv2") && (
+          <CheckboxList
+            title="AUv2"
+            items={plugins.AUv2}
+            selectedItems={selectedPlugins.AUv2}
+            disabled={isProcessing || !plugins.AUv2.length}
+            onChange={(items) => {
+              setSelectedPlugins({ ...selectedPlugins, AUv2: items });
             }}
             kind="bordered"
             className="max-w-sm"

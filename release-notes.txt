@@ -1,4 +1,5 @@
+- LV2 plug-ins can now be installed
+- AUv2 (Audio Unit) plug-ins can now be installed on macOS
 - new dm-TimeWarp plug-in
 - new dm-Seq plug-in (LV2 / MOD Desktop only)
-- LV2 plug-ins can now be installed
 - updated packages

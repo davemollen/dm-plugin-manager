@@ -5,6 +5,7 @@ import { FolderInput } from "@/pages/PluginManagerPage1/FolderInput";
 import { getDefaultPluginFolders } from "./PluginManagerPage1/getDefaultPluginFolders";
 import { usePluginContext } from "@/hooks/usePluginContext";
 import { useNavigate } from "react-router-dom";
+import { type } from "@tauri-apps/plugin-os";
 
 export function PluginManagerPage1() {
   const {
@@ -18,9 +19,14 @@ export function PluginManagerPage1() {
     onPluginFolderChange,
   } = usePluginContext();
   const navigate = useNavigate();
+  const osType = type();
 
-  const { defaultVst3Folder, defaultClapFolder, defaultLV2Folder } =
-    getDefaultPluginFolders();
+  const {
+    defaultVst3Folder,
+    defaultClapFolder,
+    defaultLV2Folder,
+    defaultAUv2Folder,
+  } = getDefaultPluginFolders();
 
   function onSubmit() {
     navigate("plugin-manager-page-2");
@@ -42,6 +48,7 @@ export function PluginManagerPage1() {
         items={{
           VST3: "VST3",
           CLAP: "CLAP",
+          ...(osType === "macos" ? { AUv2: "AUv2" } : undefined),
           LV2: "LV2 / MOD Desktop",
           "MOD Audio": "MOD Audio",
         }}
@@ -67,6 +74,7 @@ export function PluginManagerPage1() {
 
       {(selectedPluginFormats.includes("VST3") ||
         selectedPluginFormats.includes("CLAP") ||
+        selectedPluginFormats.includes("AUv2") ||
         selectedPluginFormats.includes("LV2")) && (
         <>
           <h4 className="mt-6 font-sans text-lg font-bold">Plugin location</h4>
@@ -92,6 +100,19 @@ export function PluginManagerPage1() {
                   label="Location: "
                   name="clapFolder"
                   value={pluginFolders.clapFolder ?? defaultClapFolder}
+                  onChange={onPluginFolderChange}
+                  className="flex-1"
+                />
+              </div>
+            )}
+            {osType === "macos" && selectedPluginFormats.includes("AUv2") && (
+              <div className="flex items-center gap-4">
+                <p className="w-20 font-sans">AUv2:</p>
+                <FolderInput
+                  id="AUv2-folder"
+                  label="Location: "
+                  name="auv2Folder"
+                  value={pluginFolders.auv2Folder ?? defaultAUv2Folder}
                   onChange={onPluginFolderChange}
                   className="flex-1"
                 />

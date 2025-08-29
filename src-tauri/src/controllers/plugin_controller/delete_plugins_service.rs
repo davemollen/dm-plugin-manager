@@ -7,7 +7,7 @@ use crate::{mod_plugin_controller, plugin_controller::utils::get_plugin_bundle_n
 use futures::future::try_join_all;
 use std::{fs, path::PathBuf};
 
-pub async fn delete_vst3_clap_or_lv2_plugins(
+pub async fn delete_desktop_plugins(
     plugins: Vec<String>,
     target_plugin_format: PluginFormat,
     folder: Option<String>,

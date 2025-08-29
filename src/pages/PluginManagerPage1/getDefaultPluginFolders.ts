@@ -9,6 +9,7 @@ export function getDefaultPluginFolders() {
         defaultVst3Folder: "/Library/Audio/Plug-Ins/VST3",
         defaultClapFolder: "/Library/Audio/Plug-Ins/CLAP",
         defaultLV2Folder: "/Library/Audio/Plug-Ins/LV2",
+        defaultAUv2Folder: "/Library/Audio/Plug-Ins/Components",
       };
     case "linux":
       return {

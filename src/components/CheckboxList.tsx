@@ -29,7 +29,7 @@ export function CheckboxList<T extends string>({
   checkboxClassName,
 }: {
   title: string;
-  items: T[] | Record<T, string>;
+  items: T[] | Partial<Record<T, string>>;
   selectedItems?: T[];
   kind?: Kind;
   onChange: (selectedItems: T[]) => void;

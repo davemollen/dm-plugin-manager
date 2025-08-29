@@ -52,6 +52,22 @@
     "dm-Vibrato",
     "dm-Whammy"
   ],
+  "AUv2": [
+    "dm-BigMuff",
+    "dm-DS1",
+    "dm-Fuzz",
+    "dm-Rat",
+    "dm-Repeat",
+    "dm-Reverb",
+    "dm-SD1",
+    "dm-Shredmaster",
+    "dm-SpaceEcho",
+    "dm-Stutter",
+    "dm-TimeWarp",
+    "dm-TubeScreamer",
+    "dm-Vibrato",
+    "dm-Whammy"
+  ],
   "MOD Audio": {
     "Duo": [
       "dm-BigMuff",

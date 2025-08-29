@@ -7,7 +7,7 @@ use super::{
 use crate::mod_plugin_controller::{self, SshError};
 use std::path::{Path, PathBuf};
 
-pub fn get_installed_vst3_clap_or_lv2_plugins(
+pub fn get_installed_desktop_plugins(
     plugin_formats: &Vec<String>,
     target_plugin_format: PluginFormat,
     folder: Option<String>,
@@ -21,6 +21,7 @@ pub fn get_installed_vst3_clap_or_lv2_plugins(
     let plugins = match target_plugin_format {
         PluginFormat::VST3 => &installable_plugins.vst3,
         PluginFormat::CLAP => &installable_plugins.clap,
+        PluginFormat::AUv2 => &installable_plugins.auv2,
         PluginFormat::LV2 => &installable_plugins.lv2,
         _ => return Ok(()),
     };
@@ -48,6 +49,7 @@ pub fn get_installed_vst3_clap_or_lv2_plugins(
     match target_plugin_format {
         PluginFormat::VST3 => installed_plugins.vst3 = found_plugins,
         PluginFormat::CLAP => installed_plugins.clap = found_plugins,
+        PluginFormat::AUv2 => installed_plugins.auv2 = found_plugins,
         PluginFormat::LV2 => installed_plugins.lv2 = found_plugins,
         _ => return Ok(()),
     };

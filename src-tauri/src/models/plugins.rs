@@ -18,6 +18,8 @@ pub struct PluginsConfig {
     pub clap: Vec<String>,
     #[serde(rename = "LV2")]
     pub lv2: Vec<String>,
+    #[serde(rename = "AUv2")]
+    pub auv2: Vec<String>,
     #[serde(rename = "MOD Audio")]
     pub mod_audio: ModPlugins,
 }
@@ -30,6 +32,8 @@ pub struct GetPluginsResponse {
     pub clap: Vec<String>,
     #[serde(rename = "LV2")]
     pub lv2: Vec<String>,
+    #[serde(rename = "AUv2")]
+    pub auv2: Vec<String>,
     #[serde(rename = "MOD Audio")]
     pub mod_audio: Vec<String>,
     #[serde(rename = "modIsConnected")]
@@ -44,6 +48,8 @@ pub struct SelectedPlugins {
     pub clap: Vec<String>,
     #[serde(rename = "LV2")]
     pub lv2: Vec<String>,
+    #[serde(rename = "AUv2")]
+    pub auv2: Vec<String>,
     #[serde(rename = "MOD Audio")]
     pub mod_audio: Vec<String>,
 }

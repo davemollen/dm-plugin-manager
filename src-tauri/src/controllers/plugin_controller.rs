@@ -15,16 +15,16 @@ pub mod utils;
 #[path = "../services/zip_service.rs"]
 mod zip_service;
 use create_plugins_service::{
-    create_mod_plugins, create_plugin_folders_on_mac_os, create_vst3_clap_or_lv2_plugins,
+    create_desktop_plugins, create_mod_plugins, create_plugin_folders_on_mac_os,
     remove_plugin_folders_on_mac_os,
 };
-use delete_plugins_service::{delete_mod_plugins, delete_vst3_clap_or_lv2_plugins};
-use get_plugins_service::{get_installed_mod_plugins, get_installed_vst3_clap_or_lv2_plugins};
+use delete_plugins_service::{delete_desktop_plugins, delete_mod_plugins};
+use get_plugins_service::{get_installed_desktop_plugins, get_installed_mod_plugins};
 use mod_platform::ModPlatform;
 use plugin_format::PluginFormat;
 use plugins::{GetPluginsResponse, PluginsConfig, SelectedPlugins};
 use std::fs::File;
-use tauri::{path::BaseDirectory, Manager};
+use tauri::{path::BaseDirectory, utils::platform::Target, Manager};
 use thiserror::Error;
 
 use crate::mod_plugin_controller::{self, ssh_service::SshError};
@@ -52,6 +52,9 @@ pub enum Error {
     #[error("Unknown operating system")]
     NoDownloadFile,
 
+    #[error("Only MacOS supports the Audio Unit plugin format")]
+    AudioUnitOSError,
+
     #[error("{0}")]
     TauriError(#[from] tauri::Error),
 
@@ -60,6 +63,9 @@ pub enum Error {
 
     #[error("Unable to create directory: {0}")]
     CreateDirectoryError(String),
+
+    #[error("Unable to copy files: {0}")]
+    CopyFilesError(String),
 }
 
 impl serde::Serialize for Error {
@@ -96,6 +102,12 @@ pub async fn get_installable_plugins(
         response.lv2 = config.lv2;
     }
 
+    if Target::current() == Target::MacOS {
+        if plugin_formats.contains(&PluginFormat::AUv2.to_string()) {
+            response.auv2 = config.auv2;
+        }
+    }
+
     if plugin_formats.contains(&PluginFormat::ModAudio.to_string()) {
         match mod_platform {
             Some(ModPlatform::Duo) => response.mod_audio = config.mod_audio.duo,
@@ -128,6 +140,7 @@ pub async fn get_installed_plugins(
     vst3_folder: Option<String>,
     clap_folder: Option<String>,
     lv2_folder: Option<String>,
+    auv2_folder: Option<String>,
     mod_platform: Option<ModPlatform>,
     handle: tauri::AppHandle,
 ) -> Result<GetPluginsResponse, Error> {
@@ -135,7 +148,7 @@ pub async fn get_installed_plugins(
     let installable_plugins =
         get_installable_plugins(plugin_formats.clone(), mod_platform, handle).await?;
 
-    get_installed_vst3_clap_or_lv2_plugins(
+    get_installed_desktop_plugins(
         &plugin_formats,
         PluginFormat::VST3,
         vst3_folder,
@@ -143,7 +156,7 @@ pub async fn get_installed_plugins(
         &mut installed_plugins,
     )?;
 
-    get_installed_vst3_clap_or_lv2_plugins(
+    get_installed_desktop_plugins(
         &plugin_formats,
         PluginFormat::CLAP,
         clap_folder,
@@ -151,13 +164,23 @@ pub async fn get_installed_plugins(
         &mut installed_plugins,
     )?;
 
-    get_installed_vst3_clap_or_lv2_plugins(
+    get_installed_desktop_plugins(
         &plugin_formats,
         PluginFormat::LV2,
         lv2_folder,
         &installable_plugins,
         &mut installed_plugins,
     )?;
+
+    if Target::current() == Target::MacOS {
+        get_installed_desktop_plugins(
+            &plugin_formats,
+            PluginFormat::AUv2,
+            auv2_folder,
+            &installable_plugins,
+            &mut installed_plugins,
+        )?;
+    }
 
     get_installed_mod_plugins(
         &plugin_formats,
@@ -175,27 +198,36 @@ pub async fn create_plugins(
     vst3_folder: Option<String>,
     clap_folder: Option<String>,
     lv2_folder: Option<String>,
+    auv2_folder: Option<String>,
     mod_platform: Option<String>,
 ) -> Result<(), Error> {
-    create_plugin_folders_on_mac_os(&plugins, &vst3_folder, &clap_folder, &lv2_folder)?;
+    create_plugin_folders_on_mac_os(
+        &plugins,
+        &vst3_folder,
+        &clap_folder,
+        &lv2_folder,
+        &auv2_folder,
+    )?;
 
-    if let Err(e) =
-        create_vst3_clap_or_lv2_plugins(&plugins.vst3, PluginFormat::VST3, &vst3_folder).await
-    {
+    if let Err(e) = create_desktop_plugins(&plugins.vst3, PluginFormat::VST3, &vst3_folder).await {
         remove_plugin_folders_on_mac_os(&plugins.vst3, PluginFormat::VST3, &vst3_folder)?;
         return Err(e);
     }
-    if let Err(e) =
-        create_vst3_clap_or_lv2_plugins(&plugins.clap, PluginFormat::CLAP, &clap_folder).await
-    {
+    if let Err(e) = create_desktop_plugins(&plugins.clap, PluginFormat::CLAP, &clap_folder).await {
         remove_plugin_folders_on_mac_os(&plugins.clap, PluginFormat::CLAP, &clap_folder)?;
         return Err(e);
     }
-    if let Err(e) =
-        create_vst3_clap_or_lv2_plugins(&plugins.lv2, PluginFormat::LV2, &lv2_folder).await
-    {
+    if let Err(e) = create_desktop_plugins(&plugins.lv2, PluginFormat::LV2, &lv2_folder).await {
         remove_plugin_folders_on_mac_os(&plugins.lv2, PluginFormat::LV2, &lv2_folder)?;
         return Err(e);
+    }
+    if Target::current() == Target::MacOS {
+        if let Err(e) =
+            create_desktop_plugins(&plugins.auv2, PluginFormat::AUv2, &auv2_folder).await
+        {
+            remove_plugin_folders_on_mac_os(&plugins.auv2, PluginFormat::AUv2, &auv2_folder)?;
+            return Err(e);
+        }
     }
 
     if let Some(platform) = mod_platform {
@@ -210,9 +242,15 @@ pub async fn delete_plugins(
     plugins: SelectedPlugins,
     vst3_folder: Option<String>,
     clap_folder: Option<String>,
+    lv2_folder: Option<String>,
+    auv2_folder: Option<String>,
 ) -> Result<(), Error> {
-    delete_vst3_clap_or_lv2_plugins(plugins.vst3, PluginFormat::VST3, vst3_folder).await?;
-    delete_vst3_clap_or_lv2_plugins(plugins.clap, PluginFormat::CLAP, clap_folder).await?;
+    delete_desktop_plugins(plugins.vst3, PluginFormat::VST3, vst3_folder).await?;
+    delete_desktop_plugins(plugins.clap, PluginFormat::CLAP, clap_folder).await?;
+    delete_desktop_plugins(plugins.lv2, PluginFormat::LV2, lv2_folder).await?;
+    if Target::current() == Target::MacOS {
+        delete_desktop_plugins(plugins.auv2, PluginFormat::AUv2, auv2_folder).await?;
+    }
     delete_mod_plugins(plugins.mod_audio).await?;
 
     Ok(())
