@@ -112,7 +112,7 @@ export function CheckboxList<T extends string>({
               className={`${checkboxStyle[kind]} ${checkboxClassName}`.trim()}
             />
           ))
-        : Object.entries<string>(items).map(([key, value]) => (
+        : Object.entries<string | undefined>(items).map(([key, value]) => (
             <Checkbox
               key={key}
               id={key + title}
