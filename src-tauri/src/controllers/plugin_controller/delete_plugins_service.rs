@@ -3,9 +3,13 @@ use super::{
     utils::{get_plugin_folder, get_plugin_path},
     Error,
 };
-use crate::{mod_plugin_controller, plugin_controller::utils::get_plugin_bundle_name};
+use crate::{
+    mod_plugin_controller,
+    plugin_controller::utils::{delete_files_on_mac_os_as_admin, get_plugin_bundle_name},
+};
 use futures::future::try_join_all;
-use std::{path::PathBuf, process::Command};
+use std::{fs, path::PathBuf};
+use tauri::utils::platform::Target;
 
 pub async fn delete_desktop_plugins(
     plugins: Vec<String>,
@@ -65,20 +69,10 @@ async fn delete_plugin(
     plugin_format: &PluginFormat,
 ) -> Result<(), Error> {
     let plugin_path = get_plugin_path(plugin_folder, plugin_name, plugin_format)?;
-    let remove_plugin_script = format!(
-        r#"do shell script "rm -rf {}" with administrator privileges"#,
-        plugin_path.to_string_lossy()
-    );
-    let remove_plugin_cmd = Command::new("osascript")
-        .arg("-e")
-        .arg(remove_plugin_script)
-        .output()?;
-
-    if remove_plugin_cmd.status.success() {
-        return Ok(());
+    if Target::current() == Target::MacOS {
+        delete_files_on_mac_os_as_admin(&plugin_path.to_string_lossy())
     } else {
-        return Err(Error::RemoveFilesError(
-            String::from_utf8_lossy(&remove_plugin_cmd.stderr).to_string(),
-        ));
+        fs::remove_dir_all(&plugin_path)?;
+        Ok(())
     }
 }

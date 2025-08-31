@@ -1,5 +1,8 @@
 use super::{plugin_format::PluginFormat, Error};
-use std::path::{Path, PathBuf};
+use std::{
+    path::{Path, PathBuf},
+    process::Command,
+};
 use tauri::utils::platform::Target;
 
 pub fn get_plugin_path(
@@ -52,4 +55,23 @@ pub fn get_plugin_folder(plugin_format: &PluginFormat) -> Result<PathBuf, Error>
     }?;
 
     Ok(plugin_folder)
+}
+
+pub fn delete_files_on_mac_os_as_admin(file_path: &str) -> Result<(), Error> {
+    let remove_dir_script = format!(
+        r#"do shell script "rm -rf {}" with administrator privileges"#,
+        file_path.trim()
+    );
+    let remove_dir_cmd = Command::new("osascript")
+        .arg("-e")
+        .arg(remove_dir_script)
+        .output()?;
+
+    if remove_dir_cmd.status.success() {
+        return Ok(());
+    } else {
+        return Err(Error::CreateDirectoryError(
+            String::from_utf8_lossy(&remove_dir_cmd.stderr).to_string(),
+        ));
+    }
 }

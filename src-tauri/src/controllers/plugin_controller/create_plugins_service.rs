@@ -5,6 +5,7 @@ use super::utils::{get_plugin_bundle_name, get_plugin_folder, get_plugin_path};
 use super::zip_service::ZipService;
 use super::Error;
 use crate::mod_plugin_controller;
+use crate::plugin_controller::utils::delete_files_on_mac_os_as_admin;
 use futures::future::try_join_all;
 use std::fs::{self, File};
 use std::io::Write;
@@ -73,25 +74,8 @@ pub fn remove_plugin_folders_on_mac_os(
     if Target::current() != Target::MacOS {
         return Ok(());
     }
-
     let plugin_paths = concatenate_plugin_paths(&plugins, plugin_format, folder)?;
-
-    let remove_dir_script = format!(
-        r#"do shell script "rm -rf {}" with administrator privileges"#,
-        plugin_paths.trim()
-    );
-    let remove_dir_cmd = Command::new("osascript")
-        .arg("-e")
-        .arg(remove_dir_script)
-        .output()?;
-
-    if remove_dir_cmd.status.success() {
-        return Ok(());
-    } else {
-        return Err(Error::CreateDirectoryError(
-            String::from_utf8_lossy(&remove_dir_cmd.stderr).to_string(),
-        ));
-    }
+    delete_files_on_mac_os_as_admin(plugin_paths.trim())
 }
 
 pub async fn create_desktop_plugins(
@@ -255,22 +239,36 @@ fn get_download_file_name(
 }
 
 fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> Result<(), Error> {
-    let copy_dir_script = format!(
-        r#"do shell script "cp -r {} {}" with administrator privileges"#,
-        src.as_ref().to_string_lossy(),
-        dst.as_ref().to_string_lossy(),
-    );
-    let copy_dir_cmd = Command::new("osascript")
-        .arg("-e")
-        .arg(copy_dir_script)
-        .output()?;
+    if Target::current() == Target::MacOS {
+        let copy_dir_script = format!(
+            r#"do shell script "cp -r {} {}" with administrator privileges"#,
+            src.as_ref().to_string_lossy(),
+            dst.as_ref().to_string_lossy(),
+        );
+        let copy_dir_cmd = Command::new("osascript")
+            .arg("-e")
+            .arg(copy_dir_script)
+            .output()?;
 
-    if copy_dir_cmd.status.success() {
-        return Ok(());
+        if copy_dir_cmd.status.success() {
+            return Ok(());
+        } else {
+            return Err(Error::CopyFilesError(
+                String::from_utf8_lossy(&copy_dir_cmd.stderr).to_string(),
+            ));
+        }
     } else {
-        return Err(Error::CopyFilesError(
-            String::from_utf8_lossy(&copy_dir_cmd.stderr).to_string(),
-        ));
+        fs::create_dir_all(&dst)?;
+        for entry in fs::read_dir(src)? {
+            let entry = entry?;
+            let file_type = entry.file_type()?;
+            if file_type.is_dir() {
+                copy_dir_all(entry.path(), dst.as_ref().join(entry.file_name()))?;
+            } else {
+                fs::copy(entry.path(), dst.as_ref().join(entry.file_name()))?;
+            }
+        }
+        Ok(())
     }
 }
 
