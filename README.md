@@ -1,6 +1,6 @@
 # DM Plugin Manager
 
-With this Desktop app built with [Tauri](https://tauri.app/) you can install all DM plugins.
+With this Desktop app built with [Tauri](https://tauri.app/) you can install all DM audio effect plugins.
 This includes VST3, CLAP, Audio Unit, LV2 and MOD audio plugins.
 
 [Download the app for your operating system here](https://github.com/davemollen/dm-plugin-manager/releases).
