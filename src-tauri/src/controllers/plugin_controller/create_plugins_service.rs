@@ -240,10 +240,13 @@ fn get_download_file_name(
 
 fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> Result<(), Error> {
     if Target::current() == Target::MacOS {
+        let dst_parent = dst.as_ref().parent().ok_or(Error::CopyFilesError(
+            "Could not extract the plugin folder from the plugin path.".to_string(),
+        ))?;
         let copy_dir_script = format!(
-            r#"do shell script "cp -r {} {}" with administrator privileges"#,
+            r#"do shell script "cp -r {} {}/" with administrator privileges"#,
             src.as_ref().to_string_lossy(),
-            dst.as_ref().to_string_lossy(),
+            dst_parent.to_string_lossy(),
         );
         let copy_dir_cmd = Command::new("osascript")
             .arg("-e")
