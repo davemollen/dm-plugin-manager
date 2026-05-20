@@ -1,6 +1,6 @@
 [package]
 name = "dm-plugin-manager"
-version = "0.1.2"
+version = "0.1.4"
 description = "DM plugin manager"
 authors = ["Dave Mollen"]
 license = ""
